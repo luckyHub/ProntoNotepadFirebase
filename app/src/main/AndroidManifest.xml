@@ -18,6 +18,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Auth UI demo -->
+        <activity
+            android:name=".auth.SignedInActivity"
+            android:label="@string/name_auth_ui" />
+        <activity android:name=".auth.SignInActivity" />
+        <activity
+            android:name=".auth.LoginActivity"
+            android:label="@string/title_activity_login"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+
+        <!-- Auth UI demo -->
+        <activity
+            android:name=".auth.AuthUiActivity"
+            android:label="@string/name_auth_ui"/>
+
     </application>
 
 </manifest>
