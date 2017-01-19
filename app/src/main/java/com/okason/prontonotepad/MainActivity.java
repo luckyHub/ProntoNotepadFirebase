@@ -38,11 +38,11 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.mikepenz.materialdrawer.util.KeyboardUtil;
-import com.okason.prontonotepad.addNote.AddNoteActivity;
+import com.okason.prontonotepad.ui.addNote.AddNoteActivity;
 import com.okason.prontonotepad.auth.AuthUiActivity;
 import com.okason.prontonotepad.model.Note;
 import com.okason.prontonotepad.model.SampleData;
-import com.okason.prontonotepad.notes.NoteListFragment;
+import com.okason.prontonotepad.ui.notes.NoteListFragment;
 import com.okason.prontonotepad.util.Constants;
 
 import java.util.List;
@@ -77,9 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
-    private static final String GOOGLE_TOS_URL = "https://www.google.com/policies/terms/";
-    public static final String DRIVE_FILE = "https://www.googleapis.com/auth/drive.file";
-    private static final int RC_SIGN_IN = 100;
+
 
 
     @Override

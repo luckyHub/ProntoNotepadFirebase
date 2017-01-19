@@ -1,5 +1,7 @@
 package com.okason.prontonotepad.model;
 
+import com.okason.prontonotepad.util.Constants;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -21,6 +23,7 @@ public class SampleData {
         Calendar calendar1 = GregorianCalendar.getInstance();
         note1.setDateModified(calendar1.getTimeInMillis());
         note1.setTagName("Family");
+        note1.setNoteType(Constants.NOTE_TYPE_AUDIO);
         notes.add(note1);
 
 
@@ -35,6 +38,7 @@ public class SampleData {
         calendar2.add(Calendar.MILLISECOND, 10005623);
         note2.setDateModified(calendar2.getTimeInMillis());
         note2.setTagName("Family");
+        note2.setNoteType(Constants.NOTE_TYPE_IMAGE);
         notes.add(note2);
 
 
@@ -50,6 +54,7 @@ public class SampleData {
         calendar3.add(Calendar.MILLISECOND, 8962422);
         note3.setTagName("Work Related");
         note3.setDateModified(calendar3.getTimeInMillis());
+        note3.setNoteType(Constants.NOTE_TYPE_REMINDER);
         notes.add(note3);
 
 
@@ -65,6 +70,7 @@ public class SampleData {
         calendar4.add(Calendar.MILLISECOND, 49762311);
         note4.setDateModified(calendar4.getTimeInMillis());
         note4.setTagName("General");
+        note4.setNoteType(Constants.NOTE_TYPE_TEXT);
         notes.add(note4);
 
 
@@ -81,6 +87,7 @@ public class SampleData {
         calendar5.add(Calendar.MILLISECOND, 2351689);
         note5.setDateModified(calendar5.getTimeInMillis());
         note5.setTagName("Work Related");
+        note5.setNoteType(Constants.NOTE_TYPE_AUDIO);
         notes.add(note5);
 
         return notes;

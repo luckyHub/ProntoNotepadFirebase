@@ -17,7 +17,7 @@
     android:orientation="horizontal">
 
     <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/image_view_customer_head_shot"
+        android:id="@+id/circle_image_view"
         android:layout_width="@dimen/profile_image_size"
         android:layout_height="@dimen/profile_image_size"
         android:layout_centerVertical="true"
@@ -73,7 +73,7 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_margin="@dimen/margin_padding_small"
-            android:src="@drawable/ic_action_remove"
+            android:src="@drawable/delete_button"
             android:visibility="visible" />
 
     </LinearLayout>

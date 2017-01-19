@@ -16,6 +16,7 @@ public class Note {
     private String imagePath;
     private String tagId;
     private String tagName;
+    private String noteType;
 
     public String getNoteId() {
         return noteId;
@@ -95,5 +96,13 @@ public class Note {
 
     public void setTagName(String tagName) {
         this.tagName = tagName;
+    }
+
+    public String getNoteType() {
+        return noteType;
+    }
+
+    public void setNoteType(String noteType) {
+        this.noteType = noteType;
     }
 }

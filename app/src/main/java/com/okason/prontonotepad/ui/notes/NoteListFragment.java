@@ -1,4 +1,4 @@
-package com.okason.prontonotepad.notes;
+package com.okason.prontonotepad.ui.notes;
 
 
 import android.os.Bundle;
@@ -10,6 +10,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.amulyakhare.textdrawable.TextDrawable;
+import com.amulyakhare.textdrawable.util.ColorGenerator;
+import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -18,6 +21,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.okason.prontonotepad.R;
 import com.okason.prontonotepad.model.Note;
+import com.okason.prontonotepad.util.Constants;
 import com.okason.prontonotepad.util.TimeUtils;
 
 import butterknife.BindView;
@@ -90,9 +94,33 @@ public class NoteListFragment extends Fragment {
 
             @Override
             protected void populateViewHolder(NoteViewHolder holder, Note note, int position) {
-
                 holder.title.setText(note.getTitle());
-                holder.noteDate.setText(TimeUtils.getTimeAgo(note.getDateModified()));
+                holder.noteDate.setText(TimeUtils.getDueDate(note.getDateModified()));
+
+                try {
+                    if (note.getNoteType().equals(Constants.NOTE_TYPE_AUDIO)){
+                        Glide.with(getContext()).load(R.drawable.headphone_button).into(holder.noteCircleIcon);
+                    }else if (note.getNoteType().equals(Constants.NOTE_TYPE_REMINDER)){
+                        Glide.with(getContext()).load(R.drawable.appointment_reminder).into(holder.noteCircleIcon);
+                    } else if (note.getNoteType().equals(Constants.NOTE_TYPE_IMAGE)){
+                        //Show the image
+                    }else {                   //Show TextView Image
+
+                        String firstLetter = note.getTitle().substring(0, 1);
+                        ColorGenerator generator = ColorGenerator.MATERIAL;
+                        int color = generator.getRandomColor();
+
+                        holder.noteCircleIcon.setVisibility(View.GONE);
+                        holder.noteIcon.setVisibility(View.VISIBLE);
+
+                        TextDrawable drawable = TextDrawable.builder()
+                                .buildRound(firstLetter, color);
+                        holder.noteIcon.setImageDrawable(drawable);
+
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
             }
         };

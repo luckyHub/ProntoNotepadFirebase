@@ -1,4 +1,4 @@
-package com.okason.prontonotepad.addNote;
+package com.okason.prontonotepad.ui.addNote;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -9,21 +9,15 @@ import android.support.v7.widget.Toolbar;
 import com.okason.prontonotepad.R;
 import com.okason.prontonotepad.util.Constants;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 public class AddNoteActivity extends AppCompatActivity {
-
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_note);
-        ButterKnife.bind(this);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         if (getIntent() != null && getIntent().hasExtra(Constants.NOTE_ID)){
             long noteId = getIntent().getLongExtra(Constants.NOTE_ID, 0);
@@ -43,5 +37,18 @@ public class AddNoteActivity extends AppCompatActivity {
                 .commit();
         getSupportActionBar().setTitle(screenTitle);
     }
+
+
+    @Override
+    public void onBackPressed() {
+        int count = getFragmentManager().getBackStackEntryCount();
+        if (count == 0) {
+            super.onBackPressed();
+            //additional code
+        } else {
+            getFragmentManager().popBackStack();
+        }
+    }
+
 
 }
