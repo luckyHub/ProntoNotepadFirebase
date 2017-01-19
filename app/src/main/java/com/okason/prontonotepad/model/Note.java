@@ -14,7 +14,8 @@ public class Note {
     private long dateModified;
     private String audioPath;
     private String imagePath;
-    private String categoryId;
+    private String tagId;
+    private String tagName;
 
     public String getNoteId() {
         return noteId;
@@ -80,11 +81,19 @@ public class Note {
         this.imagePath = imagePath;
     }
 
-    public String getCategoryId() {
-        return categoryId;
+    public String getTagId() {
+        return tagId;
     }
 
-    public void setCategoryId(String categoryId) {
-        this.categoryId = categoryId;
+    public void setTagId(String tagId) {
+        this.tagId = tagId;
+    }
+
+    public String getTagName() {
+        return tagName;
+    }
+
+    public void setTagName(String tagName) {
+        this.tagName = tagName;
     }
 }

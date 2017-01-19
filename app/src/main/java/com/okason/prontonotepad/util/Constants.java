@@ -12,4 +12,8 @@ public class Constants {
     public final static int DELETE = 5;
 
 
+    public static final String NOTE_ID = "note_id";
+
+
+    public static final String FIRST_RUN = "first_run";
 }

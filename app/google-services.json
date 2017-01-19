@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "559478564757",
+    "firebase_url": "https://prontonotepad.firebaseio.com",
+    "project_id": "prontonotepad",
+    "storage_bucket": "prontonotepad.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:559478564757:android:70b3abdc06a29d8d",
+        "android_client_info": {
+          "package_name": "com.okason.prontonotepad"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "559478564757-n92j6te54ip2k3b78ds9bfefjsafl3mk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.okason.prontonotepad",
+            "certificate_hash": "5B3AA978A97D6AAE682237C7F97D187151693A53"
+          }
+        },
+        {
+          "client_id": "559478564757-t41ossqq2buldf9bi2hlet26jh7pm4co.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfVUlZ1wHA46ulNGLt03_vKJNqfGBtWR8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "559478564757-t41ossqq2buldf9bi2hlet26jh7pm4co.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

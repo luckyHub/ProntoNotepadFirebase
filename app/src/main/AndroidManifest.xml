@@ -26,13 +26,20 @@
         <activity
             android:name=".auth.LoginActivity"
             android:label="@string/title_activity_login"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <!-- Auth UI demo -->
         <activity
             android:name=".auth.AuthUiActivity"
-            android:label="@string/name_auth_ui"/>
-
+            android:label="@string/name_auth_ui" />
+        <activity
+            android:name=".addNote.AddNoteActivity"
+            android:label="@string/title_activity_add_note"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.okason.prontonotepad.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

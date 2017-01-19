@@ -3,18 +3,21 @@ package com.okason.prontonotepad;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.util.Log;
 import android.view.View;
 
 import com.firebase.ui.auth.AuthUI;
@@ -35,12 +38,14 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.mikepenz.materialdrawer.util.KeyboardUtil;
+import com.okason.prontonotepad.addNote.AddNoteActivity;
 import com.okason.prontonotepad.auth.AuthUiActivity;
 import com.okason.prontonotepad.model.Note;
+import com.okason.prontonotepad.model.SampleData;
+import com.okason.prontonotepad.notes.NoteListFragment;
 import com.okason.prontonotepad.util.Constants;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -52,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
     private AccountHeader mHeader = null;
     private Drawer mDrawer = null;
     private Activity mActivity;
+    private SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
+
 
 
 
@@ -108,10 +116,15 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addInitialDataToFirebase();
+                startActivity(new Intent(mActivity, AddNoteActivity.class));
             }
         });
+
+        addDefaultData();
+        openFragment(new NoteListFragment(), "Notes");
     }
+
+
 
     private void setupNavigationDrawer(Bundle savedInstanceState) {
         mUsername = TextUtils.isEmpty(mUsername) ? ANONYMOUS : mUsername;
@@ -257,47 +270,48 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void addInitialDataToFirebase() {
-        Note note1 = new Note();
-        note1.setNoteId("ABC123");
-        note1.setTitle("DisneyLand Trip");
-        note1.setContent("We went to Disneyland today and the kids had lots of fun!");
-        Calendar calendar1 = GregorianCalendar.getInstance();
-        note1.setDateModified(calendar1.getTimeInMillis());
-        note1.setCategoryId("ADC432");
+;
 
-        //mDatabase.child("notes").push().setValue(note1);
-        DatabaseReference userSpecificRef =  mDatabase.child("users/" + mFirebaseUser.getUid());
-        userSpecificRef.push().setValue(note1);
 
-    }
+        DatabaseReference userSpecificRef =  mDatabase.child("users/" + mFirebaseUser.getUid() + "/notes");
+        Log.d(LOG_TAG, "userSpecificRef: " + userSpecificRef);
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        List<Note> sampleNotes = SampleData.getSampleNotes();
+        for (Note note: sampleNotes){
+            String key = userSpecificRef.push().getKey();
+            note.setNoteId(key);
+            userSpecificRef.child(key).setValue(note);
         }
 
-        return super.onOptionsItemSelected(item);
     }
+
 
 
 
     @MainThread
     private void showSnackbar(@StringRes int errorMessageRes) {
         Snackbar.make(mRootView, errorMessageRes, Snackbar.LENGTH_LONG).show();
+    }
+
+    private void openFragment(Fragment fragment, String screenTitle){
+        getSupportFragmentManager()
+                .beginTransaction()
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .replace(R.id.container, fragment)
+                .addToBackStack(screenTitle)
+                .commit();
+        getSupportActionBar().setTitle(screenTitle);
+    }
+
+    private void addDefaultData() {
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        editor = sharedPreferences.edit();
+        if (sharedPreferences.getBoolean(Constants.FIRST_RUN, true)) {
+            addInitialDataToFirebase();
+            editor.putBoolean(Constants.FIRST_RUN, false).commit();
+        }
+
     }
 
 
