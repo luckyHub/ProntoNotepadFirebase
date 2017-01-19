@@ -38,4 +38,5 @@
     <dimen name="dividerHeight">1dp</dimen>
     <dimen name="icon_width_height">30dp</dimen>
     <dimen name="large_brush">40dp</dimen>
+    <dimen name="profile_image_size">72dp</dimen>
 </resources>

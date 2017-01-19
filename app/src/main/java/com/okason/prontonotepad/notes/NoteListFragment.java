@@ -20,8 +20,6 @@ import com.okason.prontonotepad.R;
 import com.okason.prontonotepad.model.Note;
 import com.okason.prontonotepad.util.TimeUtils;
 
-import java.util.ArrayList;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -35,7 +33,6 @@ public class NoteListFragment extends Fragment {
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private FloatingActionButton mFab;
-    private NotesAdapter mListAdapter;
     private FirebaseRecyclerAdapter<Note, NoteViewHolder> mNoteFirebaseAdapter;
     private View mRootView;
 
@@ -52,7 +49,7 @@ public class NoteListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        mListAdapter = new NotesAdapter(new ArrayList<Note>());
+
     }
 
 

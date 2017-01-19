@@ -20,7 +20,7 @@ public class NoteViewHolder extends RecyclerView.ViewHolder {
     TextView title;
     @BindView(R.id.text_view_note_date)
     TextView noteDate;
-    @BindView(R.id.image_view_delete)
+    @BindView(R.id.image_view_expand)
     ImageView delete;
 
 
