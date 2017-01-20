@@ -13,7 +13,25 @@ import java.util.List;
 
 public class SampleData {
 
-    public static List<Note> getSampleNotes() {
+    public static List<String> getSampleCategories() {
+        List<String> categoryNames = new ArrayList<>();
+
+        categoryNames.add("Family");
+        categoryNames.add("Word");
+        categoryNames.add("Productivity");
+        categoryNames.add("Personal");
+        categoryNames.add("Finance");
+        categoryNames.add("Fitness");
+        categoryNames.add("Blog Posts");
+        categoryNames.add("Social Media");
+
+
+        return categoryNames;
+
+    }
+
+
+        public static List<Note> getSampleNotes() {
 
         List<Note> notes = new ArrayList<>();
         //create the dummy note
@@ -22,7 +40,6 @@ public class SampleData {
         note1.setContent("We went to Disneyland today and the kids had lots of fun!");
         Calendar calendar1 = GregorianCalendar.getInstance();
         note1.setDateModified(calendar1.getTimeInMillis());
-        note1.setTagName("Family");
         note1.setNoteType(Constants.NOTE_TYPE_AUDIO);
         notes.add(note1);
 
@@ -37,7 +54,6 @@ public class SampleData {
         calendar2.add(Calendar.DAY_OF_WEEK, -1);
         calendar2.add(Calendar.MILLISECOND, 10005623);
         note2.setDateModified(calendar2.getTimeInMillis());
-        note2.setTagName("Family");
         note2.setNoteType(Constants.NOTE_TYPE_IMAGE);
         notes.add(note2);
 
@@ -52,8 +68,7 @@ public class SampleData {
         Calendar calendar3 = GregorianCalendar.getInstance();
         calendar3.add(Calendar.DAY_OF_WEEK, -2);
         calendar3.add(Calendar.MILLISECOND, 8962422);
-        note3.setTagName("Work Related");
-        note3.setDateModified(calendar3.getTimeInMillis());
+             note3.setDateModified(calendar3.getTimeInMillis());
         note3.setNoteType(Constants.NOTE_TYPE_REMINDER);
         notes.add(note3);
 
@@ -69,7 +84,6 @@ public class SampleData {
         calendar4.add(Calendar.DAY_OF_WEEK, -4);
         calendar4.add(Calendar.MILLISECOND, 49762311);
         note4.setDateModified(calendar4.getTimeInMillis());
-        note4.setTagName("General");
         note4.setNoteType(Constants.NOTE_TYPE_TEXT);
         notes.add(note4);
 
@@ -86,8 +100,7 @@ public class SampleData {
         calendar4.add(Calendar.MONTH, -2);
         calendar5.add(Calendar.MILLISECOND, 2351689);
         note5.setDateModified(calendar5.getTimeInMillis());
-        note5.setTagName("Work Related");
-        note5.setNoteType(Constants.NOTE_TYPE_AUDIO);
+             note5.setNoteType(Constants.NOTE_TYPE_AUDIO);
         notes.add(note5);
 
         return notes;

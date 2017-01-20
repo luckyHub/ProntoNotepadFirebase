@@ -17,7 +17,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 
 import com.firebase.ui.auth.AuthUI;
@@ -38,10 +37,12 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.mikepenz.materialdrawer.util.KeyboardUtil;
-import com.okason.prontonotepad.ui.addNote.AddNoteActivity;
 import com.okason.prontonotepad.auth.AuthUiActivity;
+import com.okason.prontonotepad.model.Category;
 import com.okason.prontonotepad.model.Note;
 import com.okason.prontonotepad.model.SampleData;
+import com.okason.prontonotepad.ui.addNote.AddNoteActivity;
+import com.okason.prontonotepad.ui.category.CategoryActivity;
 import com.okason.prontonotepad.ui.notes.NoteListFragment;
 import com.okason.prontonotepad.util.Constants;
 
@@ -78,6 +79,10 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
 
+    private DatabaseReference noteCloudReference;
+    private DatabaseReference categoryCloudReference;
+
+
 
 
     @Override
@@ -95,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
 
+
+
         if (mFirebaseUser == null){
             //Not signed in, launch the Sign In Activity
             startActivity(new Intent(this, AuthUiActivity.class));
@@ -107,6 +114,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setupNavigationDrawer(savedInstanceState);
+
+        noteCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT + mFirebaseUser.getUid() + Constants.NOTE_CLOUD_END_POINT);
+        categoryCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT + mFirebaseUser.getUid() + Constants.CATEGORY_CLOUD_END_POINT);
 
 
 
@@ -131,13 +141,13 @@ public class MainActivity extends AppCompatActivity {
 
         IProfile profile = new ProfileDrawerItem()
                 .withName(mUsername)
-                .withEmail(mEmailAddress)
+                .withEmail("someemail@gymmail.com")
                 .withIcon(mPhotoUrl)
                 .withIdentifier(102);
 
         mHeader = new AccountHeaderBuilder()
                 .withActivity(this)
-                .withHeaderBackground(R.drawable.header)
+                .withHeaderBackground(R.drawable.header_2)
                 .addProfiles(profile)
                 .build();
         mDrawer = new DrawerBuilder()
@@ -147,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
                 .withActionBarDrawerToggle(true)
                 .addDrawerItems(
                         new PrimaryDrawerItem().withName("Notes").withIcon(GoogleMaterial.Icon.gmd_view_list).withIdentifier(Constants.NOTES),
-                        new PrimaryDrawerItem().withName("Tags").withIcon(GoogleMaterial.Icon.gmd_folder).withIdentifier(Constants.TAGS),
+                        new PrimaryDrawerItem().withName("Categories").withIcon(GoogleMaterial.Icon.gmd_folder).withIdentifier(Constants.CATEGORIES),
                         new PrimaryDrawerItem().withName("Settings").withIcon(GoogleMaterial.Icon.gmd_settings).withIdentifier(Constants.SETTINGS),
                         new PrimaryDrawerItem().withName("Logout").withIcon(GoogleMaterial.Icon.gmd_lock).withIdentifier(Constants.LOGOUT)
                 )
@@ -185,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
                 .withFireOnInitialOnClick(true)
                 .withSavedInstance(savedInstanceState)
                 .build();
-
+        mDrawer.addStickyFooterItem(new PrimaryDrawerItem().withName("Delete Account!").withIcon(GoogleMaterial.Icon.gmd_delete).withIdentifier(Constants.DELETE));
 
 
     }
@@ -193,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mDrawer.addStickyFooterItem(new PrimaryDrawerItem().withName("Delete Account!").withIcon(GoogleMaterial.Icon.gmd_delete).withIdentifier(Constants.DELETE));
+
     }
 
     private void onTouchDrawer(int position) {
@@ -201,7 +211,8 @@ public class MainActivity extends AppCompatActivity {
             case Constants.NOTES:
                 //Do Nothing, we are already on Notes
                 break;
-            case Constants.TAGS:
+            case Constants.CATEGORIES:
+                startActivity(new Intent(MainActivity.this, CategoryActivity.class));
                 //Go to Tags
                 break;
             case Constants.SETTINGS:
@@ -267,18 +278,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void addInitialDataToFirebase() {
-;
-
-
-        DatabaseReference userSpecificRef =  mDatabase.child("users/" + mFirebaseUser.getUid() + "/notes");
-        Log.d(LOG_TAG, "userSpecificRef: " + userSpecificRef);
+    private void addInitialNotesToFirebase() {
 
         List<Note> sampleNotes = SampleData.getSampleNotes();
         for (Note note: sampleNotes){
-            String key = userSpecificRef.push().getKey();
+            String key = noteCloudReference.push().getKey();
             note.setNoteId(key);
-            userSpecificRef.child(key).setValue(note);
+            noteCloudReference.child(key).setValue(note);
+        }
+
+    }
+
+    private void addInitialCategoriesToFirebase(){
+        List<String> categoryNames = SampleData.getSampleCategories();
+        for (String categoryName: categoryNames){
+            Category category = new Category();
+            category.setCategoryName(categoryName);
+            category.setCategoryId(categoryCloudReference.push().getKey());
+            categoryCloudReference.child(category.getCategoryId()).setValue(category);
         }
 
     }
@@ -306,10 +323,10 @@ public class MainActivity extends AppCompatActivity {
 
         editor = sharedPreferences.edit();
         if (sharedPreferences.getBoolean(Constants.FIRST_RUN, true)) {
-            addInitialDataToFirebase();
+            addInitialNotesToFirebase();
+            addInitialCategoriesToFirebase();
             editor.putBoolean(Constants.FIRST_RUN, false).commit();
         }
-
     }
 
 

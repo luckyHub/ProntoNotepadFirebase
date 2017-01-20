@@ -9,13 +9,12 @@ public class Note {
     private String noteId;
     private String title;
     private String content;
-    private int color;
     private long dateCreated;
     private long dateModified;
+    private long nextReminder;
     private String audioPath;
     private String imagePath;
-    private String tagId;
-    private String tagName;
+    private String categoryId;
     private String noteType;
 
     public String getNoteId() {
@@ -40,14 +39,6 @@ public class Note {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public int getColor() {
-        return color;
-    }
-
-    public void setColor(int color) {
-        this.color = color;
     }
 
     public long getDateCreated() {
@@ -82,20 +73,12 @@ public class Note {
         this.imagePath = imagePath;
     }
 
-    public String getTagId() {
-        return tagId;
+    public String getCategoryId() {
+        return categoryId;
     }
 
-    public void setTagId(String tagId) {
-        this.tagId = tagId;
-    }
-
-    public String getTagName() {
-        return tagName;
-    }
-
-    public void setTagName(String tagName) {
-        this.tagName = tagName;
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 
     public String getNoteType() {
@@ -104,5 +87,13 @@ public class Note {
 
     public void setNoteType(String noteType) {
         this.noteType = noteType;
+    }
+
+    public long getNextReminder() {
+        return nextReminder;
+    }
+
+    public void setNextReminder(long nextReminder) {
+        this.nextReminder = nextReminder;
     }
 }

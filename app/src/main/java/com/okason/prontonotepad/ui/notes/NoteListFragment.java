@@ -33,7 +33,10 @@ import butterknife.ButterKnife;
 public class NoteListFragment extends Fragment {
 
     private DatabaseReference mDatabase;
-    private DatabaseReference userSpecificRef;
+    private DatabaseReference noteCloudReference;
+    private DatabaseReference categoryCloudReference;
+
+
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private FloatingActionButton mFab;
@@ -73,7 +76,9 @@ public class NoteListFragment extends Fragment {
         ButterKnife.bind(this, mRootView);
 
 
-        userSpecificRef =  mDatabase.child("users/" + mFirebaseUser.getUid());
+        noteCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT + mFirebaseUser.getUid() + Constants.NOTE_CLOUD_END_POINT);
+        categoryCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT + mFirebaseUser.getUid() + Constants.CATEGORY_CLOUD_END_POINT);
+
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -81,7 +86,7 @@ public class NoteListFragment extends Fragment {
                 Note.class,
                 R.layout.row_note_list,
                 NoteViewHolder.class,
-                userSpecificRef.child("notes")) {
+                noteCloudReference) {
 
             @Override
             protected Note parseSnapshot(DataSnapshot snapshot) {

@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -14,6 +15,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.okason.prontonotepad.R;
@@ -29,6 +34,13 @@ public class AddCategoryDialogFragment extends DialogFragment {
     private Category mCategory;
     private boolean mInEditMode = false;
 
+    private DatabaseReference mDatabase;
+    private DatabaseReference categoryCloudReference;
+
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseUser mFirebaseUser;
+    private FloatingActionButton mFab;
+
 
 
 
@@ -39,6 +51,12 @@ public class AddCategoryDialogFragment extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+
+        categoryCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT + mFirebaseUser.getUid() + Constants.CATEGORY_CLOUD_END_POINT);
     }
 
     public static AddCategoryDialogFragment newInstance(String content){
@@ -56,11 +74,11 @@ public class AddCategoryDialogFragment extends DialogFragment {
     /**
      * The method gets the Category that was passed in, in the form of serialized String
      * if nothing was passed in then it will create a new Category
-     *
+     *I
      */
     public void getCurrentCategory(){
         Bundle args = getArguments();
-        if (args != null && args.containsKey(Constants.SERIALIZED_CATEGORY)){
+        if (args != null && args.containsKey(Constants.SERIALZED_CATEGORY)){
             String serializedCategory = args.getString(Constants.SERIALIZED_CATEGORY, "");
             if (!TextUtils.isEmpty(serializedCategory)){
                 Gson gson = new Gson();
@@ -166,11 +184,13 @@ public class AddCategoryDialogFragment extends DialogFragment {
             if (mCategory != null){
                 mCategory.setCategoryName(mCategoryEditText.getText().toString().trim());
                 //Update to Firebase
+                categoryCloudReference.child(mCategory.getCategoryId()).setValue(mCategory);
             }
         }else {
-            Category selectedCategory = new Category();
-            selectedCategory.setCategoryName(mCategoryEditText.getText().toString().trim());
-            //Save to Firebase
+            Category category = new Category();
+            category.setCategoryName(mCategoryEditText.getText().toString().trim());
+            category.setCategoryId(categoryCloudReference.push().getKey());
+            categoryCloudReference.child(category.getCategoryId()).setValue(category);
         }
 
     }
