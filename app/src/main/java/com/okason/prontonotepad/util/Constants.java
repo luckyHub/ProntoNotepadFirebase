@@ -33,4 +33,5 @@ public class Constants {
     public static final String SERIALZED_CATEGORY = "serialized_category";
 
     public final static String SELECTED_CATEGORY_ID = "selected_category_id";
+    public static final String SERIALIZED_NOTE = "serialized_note";
 }

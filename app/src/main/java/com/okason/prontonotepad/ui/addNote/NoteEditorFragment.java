@@ -25,6 +25,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.okason.prontonotepad.R;
 import com.okason.prontonotepad.listeners.OnCategorySelectedListener;
 import com.okason.prontonotepad.model.Category;
@@ -38,8 +40,6 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-
-import static android.R.attr.category;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -75,17 +75,32 @@ public class NoteEditorFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getCurrentNote();
         setHasOptionsMenu(true);
     }
 
-    public static NoteEditorFragment newInstance(long noteId){
+    public static NoteEditorFragment newInstance(String content){
         NoteEditorFragment fragment = new NoteEditorFragment();
-        if (noteId > 0){
+        if (!TextUtils.isEmpty(content)){
             Bundle args = new Bundle();
-            args.putLong(Constants.NOTE_ID, noteId);
+            args.putString(Constants.SERIALIZED_NOTE, content);
             fragment.setArguments(args);
         }
         return fragment;
+    }
+
+    public void getCurrentNote(){
+        Bundle args = getArguments();
+        if (args != null && args.containsKey(Constants.SERIALIZED_CATEGORY)){
+            String serializedNote = args.getString(Constants.SERIALIZED_CATEGORY, "");
+            if (!serializedNote.isEmpty()){
+                Gson gson = new Gson();
+                mCurrentNote = gson.fromJson(serializedNote, new TypeToken<Note>(){}.getType());
+                if (mCurrentNote != null & !TextUtils.isEmpty(mCurrentNote.getNoteId())){
+                    mEditMode = true;
+                }
+            }
+        }
     }
 
 
@@ -124,6 +139,28 @@ public class NoteEditorFragment extends Fragment {
         });
 
         return mRootView;
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mEditMode){
+            populateNote(mCurrentNote);
+        }
+    }
+
+    public void populateNote(Note note) {
+        mTitle.setText(note.getTitle());
+        mTitle.setHint(R.string.placeholder_note_title);
+        mCategory.setText(getCategoryName(note.getCategoryId()));
+        mContent.setText(note.getContent());
+        mContent.setHint(R.string.placeholder_note_text);
+
+    }
+
+    private String getCategoryName(String categoryId) {
+        return "";
     }
 
     @OnClick(R.id.edit_text_category)
