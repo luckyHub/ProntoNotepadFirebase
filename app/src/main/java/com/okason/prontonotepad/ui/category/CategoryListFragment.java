@@ -2,6 +2,7 @@ package com.okason.prontonotepad.ui.category;
 
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -28,6 +29,7 @@ import com.okason.prontonotepad.R;
 import com.okason.prontonotepad.listeners.OnCategorySelectedListener;
 import com.okason.prontonotepad.model.Category;
 import com.okason.prontonotepad.model.Note;
+import com.okason.prontonotepad.services.DeleteCategoryIntentService;
 import com.okason.prontonotepad.util.Constants;
 
 import java.util.ArrayList;
@@ -195,7 +197,15 @@ public class CategoryListFragment extends Fragment implements OnCategorySelected
             @Override
             public void onClick(DialogInterface dialog, int which) {
                //Delete Category
-                categoryCloudReference.child(category.getCategoryId()).removeValue();
+                int noteCount = getNoteCount(category.getCategoryId());
+                if (noteCount > 0){
+                    Intent intent = new Intent(getContext(), DeleteCategoryIntentService.class);
+                    intent.putExtra(Constants.SELECTED_CATEGORY_ID, category.getCategoryId());
+                    getActivity().startService(intent);
+                }else {
+                    categoryCloudReference.child(category.getCategoryId()).removeValue();
+                }
+
             }
         });
         alertDialog.setNegativeButton(R.string.action_cancel, new DialogInterface.OnClickListener() {
@@ -207,6 +217,8 @@ public class CategoryListFragment extends Fragment implements OnCategorySelected
         alertDialog.show();
 
     }
+
+
 
     public void showEditCategoryForm(Category category) {
         Gson gson = new Gson();

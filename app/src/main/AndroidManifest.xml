@@ -50,6 +50,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.okason.prontonotepad.MainActivity" />
         </activity>
+
+        <service
+            android:name=".services.DeleteCategoryIntentService"
+            android:exported="false"></service>
     </application>
 
 </manifest>

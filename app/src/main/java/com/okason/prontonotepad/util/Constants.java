@@ -31,4 +31,6 @@ public class Constants {
     public static final String NOTE_ATTACHMENT_CLOUD_END_POINT = "/note_attachments";
     public static final String USERS_CLOUD_END_POINT = "/users/";
     public static final String SERIALZED_CATEGORY = "serialized_category";
+
+    public final static String SELECTED_CATEGORY_ID = "selected_category_id";
 }
