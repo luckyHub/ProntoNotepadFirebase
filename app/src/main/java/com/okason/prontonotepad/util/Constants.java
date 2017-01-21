@@ -34,4 +34,5 @@ public class Constants {
 
     public final static String SELECTED_CATEGORY_ID = "selected_category_id";
     public static final String SERIALIZED_NOTE = "serialized_note";
+    public static final String RECORD_FOLDER = "ProntoNote/Records";
 }

@@ -85,5 +85,16 @@
     <string name="note_detail">Note Detail</string>
     <string name="action_send">Send</string>
     <string name="action_nfc">NFC Beam</string>
+    <string name="action_record">Record</string>
+    <string name="action_camera">Picture</string>
+    <string name="action_sketch">Sketch</string>
+    <string name="action_file">Files</string>
+    <string name="action_alarm">Reminder</string>
+    <string name="share_using">Share using</string>
+    <string name="error_no_mic">No Microphone found</string>
+    <string name="start">Start</string>
+    <string name="stop_recording">Stop Recording</string>
+    <string name="stop">Stop</string>
+    <string name="start_recording">Start Recording</string>
 
 </resources>

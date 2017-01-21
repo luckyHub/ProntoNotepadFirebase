@@ -1,14 +1,25 @@
 package com.okason.prontonotepad.ui.addNote;
 
 
+import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.media.MediaPlayer;
+import android.media.MediaRecorder;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,8 +45,13 @@ import com.okason.prontonotepad.model.Category;
 import com.okason.prontonotepad.model.Note;
 import com.okason.prontonotepad.ui.category.SelectCategoryDialogFragment;
 import com.okason.prontonotepad.util.Constants;
+import com.okason.prontonotepad.util.TimeUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import butterknife.BindView;
@@ -51,9 +67,11 @@ public class NoteEditorFragment extends Fragment {
     private Note mCurrentNote = null;
     private Category mCurrentCategory = null;
     private View mRootView;
+    private Toolbar mToolbarBottom;
 
     private List<Category> mCategories;
     private SelectCategoryDialogFragment selectCategoryDialog;
+    private final static String LOG_TAG = "NoteEditorFragment";
 
 
     private FirebaseAuth mFirebaseAuth;
@@ -63,10 +81,18 @@ public class NoteEditorFragment extends Fragment {
     private DatabaseReference noteCloudReference;
     private DatabaseReference categoryCloudReference;
 
+    private final static int EXTERNAL_PERMISSION_REQUEST = 1;
+    private final static int RECORD_AUDIO_PERMISSION_REQUEST = 2;
+
 
     @BindView(R.id.edit_text_category) EditText mCategory;
     @BindView(R.id.edit_text_title) EditText mTitle;
     @BindView(R.id.edit_text_note) EditText mContent;
+
+    private MediaRecorder mRecorder = null;
+    private MediaPlayer   mPlayer = null;
+    private String mRecordFileName = null;
+    private File mRecordFolder = null;
 
 
     public NoteEditorFragment() {
@@ -139,6 +165,49 @@ public class NoteEditorFragment extends Fragment {
             }
         });
 
+        mToolbarBottom = (Toolbar)getActivity().findViewById(R.id.toolbar_bottom);
+        mToolbarBottom.getMenu().clear();
+        mToolbarBottom.inflateMenu(R.menu.menu_note_editor_bottom);
+
+
+        mToolbarBottom.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                int id = item.getItemId();
+                switch (id) {
+                    case R.id.action_delete:
+                        promptForDelete(mCurrentNote);
+                        break;
+                    case R.id.action_share:
+                        displayShareIntent();
+                        break;
+                    case R.id.action_camera:
+                       //show camera intent
+                        break;
+                    case R.id.action_record:
+                        PackageManager packageManager = getActivity().getPackageManager();
+                        if (packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
+                            if (isStoragePermissionGranted()) {
+                                if (isRecordPermissionGranted()) {
+                                    promptToStartRecording();
+                                }
+                            }
+                        } else {
+                            makeToast(getContext().getString(R.string.error_no_mic));
+                        }
+                        break;
+                    case R.id.action_play:
+                        if (mRecordFileName == null){
+                            makeToast("No Recording found");
+                        }else{
+                            startPlaying();
+                        }
+
+                }
+                return true;
+            }
+        });
+
         return mRootView;
     }
 
@@ -192,11 +261,6 @@ public class NoteEditorFragment extends Fragment {
 
     private void validateAndSaveContent() {
 
-        if (mCurrentCategory == null) {
-            addCategoryToFirebase(Constants.DEFAULT_CATEGORY);
-            makeToast("Default Category added");
-        }
-
         String title = mTitle.getText().toString();
         if (TextUtils.isEmpty(title)) {
             mTitle.setError(getString(R.string.title_is_required));
@@ -242,7 +306,10 @@ public class NoteEditorFragment extends Fragment {
             String key = noteCloudReference.push().getKey();
             note.setNoteId(key);
             note.setDateCreated(System.currentTimeMillis());
-            note.setDateModified(System.currentTimeMillis());
+            Calendar calendar2 = GregorianCalendar.getInstance();
+            calendar2.add(Calendar.DAY_OF_WEEK, +4);
+            calendar2.add(Calendar.MILLISECOND, 10005623);
+            note.setDateModified(calendar2.getTimeInMillis());
             noteCloudReference.child(key).setValue(note);
             makeToast("Note added");
         }
@@ -304,6 +371,243 @@ public class NoteEditorFragment extends Fragment {
             }
         });
         selectCategoryDialog.show(getActivity().getFragmentManager(), "Dialog");
+    }
+
+    private void promptForDelete(Note note){
+        String title = "Delete " + note.getTitle();
+        String message =  "Are you sure you want to delete note " + note.getTitle() + "?";
+
+
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        View titleView = (View)inflater.inflate(R.layout.dialog_title, null);
+        TextView titleText = (TextView)titleView.findViewById(R.id.text_view_dialog_title);
+        titleText.setText(title);
+        alertDialog.show();
+        alertDialog.setCustomTitle(titleView);
+
+        alertDialog.setMessage(message);
+        alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                startActivity(new Intent(getActivity(), MainActivity.class));
+            }
+        });
+        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+    }
+
+    public void promptForDiscard(){
+        String title = "Discard Note";
+        String message =  "Are you sure you want to discard note ";
+
+
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        View titleView = (View)inflater.inflate(R.layout.dialog_title, null);
+        TextView titleText = (TextView)titleView.findViewById(R.id.text_view_dialog_title);
+        titleText.setText(title);
+        alertDialog.setCustomTitle(titleView);
+
+        alertDialog.setMessage(message);
+        alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                resetFields();
+                startActivity(new Intent(getActivity(), MainActivity.class));
+            }
+        });
+        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        alertDialog.show();
+    }
+
+    private void resetFields() {
+        mCategory.setText("");
+        mTitle.setText("");
+        mContent.setText("");
+    }
+
+    public void displayShareIntent() {
+        Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+        sharingIntent.setType("text/plain");
+        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, mTitle.getText().toString());
+        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, mContent.getText().toString());
+        startActivity(Intent.createChooser(sharingIntent, getResources().getString(R.string.share_using)));
+
+    }
+
+
+    private void startPlaying() {
+        mPlayer = new MediaPlayer();
+        try {
+            mPlayer.setDataSource(mRecordFileName);
+            mPlayer.prepare();
+            mPlayer.start();
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "prepare() failed");
+        }
+    }
+
+
+    private void startRecording() {
+        mRecorder = new MediaRecorder();
+        mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        mRecorder.setOutputFile(getRecordFileName());
+        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+
+        try {
+            mRecorder.prepare();
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "prepare() failed");
+        }
+
+        mRecorder.start();
+    }
+
+    private String getRecordFileName() {
+        if (mRecordFileName == null || mRecordFileName.equals("")) {
+            mRecordFolder = new File(Environment.getExternalStoragePublicDirectory(Constants.RECORD_FOLDER), "");
+            if (!mRecordFolder.exists()) {
+                mRecordFolder.mkdirs();
+            }
+
+            File recordFile = new File(mRecordFolder, TimeUtils.getDatetimeSuffix(System.currentTimeMillis()) + ".3gp");
+            mRecordFileName = recordFile.getAbsolutePath();
+            return mRecordFileName;
+        } else {
+            return mRecordFileName;
+        }
+    }
+
+    private void stopRecording() {
+        mRecorder.stop();
+        mRecorder.release();
+        mRecorder = null;
+    }
+
+
+    public void promptToStartRecording(){
+        String title = getContext().getString(R.string.start_recording);
+
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        View titleView = (View)inflater.inflate(R.layout.dialog_title, null);
+        TextView titleText = (TextView)titleView.findViewById(R.id.text_view_dialog_title);
+        titleText.setText(title);
+        alertDialog.setCustomTitle(titleView);
+
+
+        alertDialog.setPositiveButton(getString(R.string.start), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                startRecording();
+                promptToStopRecording();
+            }
+        });
+        alertDialog.setNegativeButton(getString(R.string.action_cancel), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        alertDialog.show();
+    }
+
+    public void promptToStopRecording(){
+        String title = getContext().getString(R.string.stop_recording);
+
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        View titleView = (View)inflater.inflate(R.layout.dialog_title, null);
+        TextView titleText = (TextView)titleView.findViewById(R.id.text_view_dialog_title);
+        titleText.setText(title);
+        alertDialog.setCustomTitle(titleView);
+
+
+        alertDialog.setPositiveButton(getString(R.string.stop), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                stopRecording();
+                dialog.dismiss();
+            }
+        });
+
+        alertDialog.show();
+    }
+
+
+    //Checks whether the user has granted the app permission to
+    //access external storage
+    private boolean isStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (getActivity().checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.v(LOG_TAG,"Permission is granted");
+                return true;
+            } else {
+                Log.v(LOG_TAG,"Permission is revoked");
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, EXTERNAL_PERMISSION_REQUEST);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            Log.v(LOG_TAG,"Permission is granted  API < 23");
+            return true;
+        }
+    }
+
+    //Checks whether the user has granted the app permission to
+    //access external storage
+    private boolean isRecordPermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (getActivity().checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                    == PackageManager.PERMISSION_GRANTED) {
+                return true;
+            } else {
+                this.requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO_PERMISSION_REQUEST);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            return true;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case EXTERNAL_PERMISSION_REQUEST:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    if (isRecordPermissionGranted()) {
+                        promptToStartRecording();
+                    }
+                } else {
+                    //permission was denied, disable backup
+                    makeToast("External Access Denied");
+                }
+                break;
+            case RECORD_AUDIO_PERMISSION_REQUEST:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    //permission was granted perform backup
+                    promptToStartRecording();
+                } else {
+                    //permission was denied, disable backup
+                    makeToast("Mic Access Denied");
+                }
+                break;
+        }
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
 }
