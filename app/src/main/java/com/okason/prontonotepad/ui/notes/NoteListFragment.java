@@ -1,14 +1,17 @@
 package com.okason.prontonotepad.ui.notes;
 
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.amulyakhare.textdrawable.TextDrawable;
 import com.amulyakhare.textdrawable.util.ColorGenerator;
@@ -19,8 +22,11 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
+import com.okason.prontonotepad.MainActivity;
 import com.okason.prontonotepad.R;
 import com.okason.prontonotepad.model.Note;
+import com.okason.prontonotepad.ui.notedetails.NoteDetailActivity;
 import com.okason.prontonotepad.util.Constants;
 import com.okason.prontonotepad.util.TimeUtils;
 
@@ -35,6 +41,7 @@ public class NoteListFragment extends Fragment {
     private DatabaseReference mDatabase;
     private DatabaseReference noteCloudReference;
     private DatabaseReference categoryCloudReference;
+    private boolean isDualScreen = false;
 
 
     private FirebaseAuth mFirebaseAuth;
@@ -44,6 +51,7 @@ public class NoteListFragment extends Fragment {
     private View mRootView;
 
     @BindView(R.id.note_recycler_view) RecyclerView mRecyclerView;
+    @BindView(R.id.empty_text) TextView mEmptyText;
 
 
 
@@ -97,10 +105,25 @@ public class NoteListFragment extends Fragment {
                 return note;
             }
 
+
+
             @Override
-            protected void populateViewHolder(NoteViewHolder holder, Note note, int position) {
+            protected void populateViewHolder(NoteViewHolder holder, final Note note, int position) {
                 holder.title.setText(note.getTitle());
+                holder.title.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        openNoteDetails(note);
+                    }
+                });
+
                 holder.noteDate.setText(TimeUtils.getDueDate(note.getDateModified()));
+                holder.delete.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        promptForDelete(note);
+                    }
+                });
 
                 try {
                     if (note.getNoteType().equals(Constants.NOTE_TYPE_AUDIO)){
@@ -128,20 +151,98 @@ public class NoteListFragment extends Fragment {
                 }
 
             }
+
         };
+
+
 
         mNoteFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
-                super.onItemRangeInserted(positionStart, itemCount);
+                int noteCount = mNoteFirebaseAdapter.getItemCount();
+                if (noteCount > 0){
+                    hideEmptyText();
+                } else {
+                    showEmptyText();
+                }
             }
         });
+
+
 
         mRecyclerView.setAdapter(mNoteFirebaseAdapter);
 
 
         return mRootView;
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        showEmptyText();
+    }
+
+    public void openNoteDetails(Note note) {
+        if (isDualScreen) {
+            showDualDetailUi(note);
+        } else {
+            showSingleDetailUi(note);
+        }
+    }
+
+    public void showDualDetailUi(Note note) {
+        MainActivity activity = (MainActivity) getActivity();
+        activity.showTwoPane(note);
+
+    }
+
+    public void showSingleDetailUi(Note note) {
+        Gson gson = new Gson();
+        String serializedNote = gson.toJson(note);
+        startActivity(NoteDetailActivity.getStartIntent(getContext(), serializedNote));
+    }
+
+    public void promptForDelete(final Note note){
+
+        String content = note.getContent();
+        String message =  "Delete " + content.substring(0, Math.min(content.length(), 50)) + "  ... ?";
+
+
+        android.app.AlertDialog.Builder alertDialog = new android.app.AlertDialog.Builder(getContext());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        View titleView = (View)inflater.inflate(R.layout.dialog_title, null);
+        TextView titleText = (TextView)titleView.findViewById(R.id.text_view_dialog_title);
+        titleText.setText(getString(R.string.are_you_sure));
+        alertDialog.setCustomTitle(titleView);
+
+        alertDialog.setMessage(message);
+        alertDialog.setPositiveButton(getString(R.string.action_yes), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (!TextUtils.isEmpty(note.getNoteId())) {
+                    noteCloudReference.child(note.getNoteId()).removeValue();
+                }
+            }
+        });
+        alertDialog.setNegativeButton(getString(R.string.action_cancel), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        alertDialog.show();
+    }
+
+    public void showEmptyText() {
+        mRecyclerView.setVisibility(View.GONE);
+        mEmptyText.setVisibility(View.VISIBLE);
+    }
+
+    public void hideEmptyText() {
+        mRecyclerView.setVisibility(View.VISIBLE);
+        mEmptyText.setVisibility(View.GONE);
+    }
+
 
 
 

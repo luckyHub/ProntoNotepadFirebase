@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.okason.prontonotepad">
 
     <application
@@ -8,7 +9,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:replace="android:supportsRtl">
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -53,7 +55,17 @@
 
         <service
             android:name=".services.DeleteCategoryIntentService"
-            android:exported="false"></service>
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.notedetails.NoteDetailActivity"
+            android:label="@string/title_activity_note_details"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.okason.prontonotepad.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

@@ -1,32 +1,41 @@
-package com.okason.prontonotepad.ui.addNote;
+package com.okason.prontonotepad.ui.notedetails;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
+import com.google.gson.Gson;
 import com.okason.prontonotepad.R;
+import com.okason.prontonotepad.model.Note;
 import com.okason.prontonotepad.util.Constants;
 
-public class AddNoteActivity extends AppCompatActivity {
+public class NoteDetailActivity extends AppCompatActivity {
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_note);
+        setContentView(R.layout.activity_note_details);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         if (getIntent() != null && getIntent().hasExtra(Constants.SERIALIZED_NOTE)){
             String serializedNote = getIntent().getStringExtra(Constants.SERIALIZED_NOTE);
-            openFragment(NoteEditorFragment.newInstance(serializedNote), getString(R.string.note_editor));
+            Gson gson = new Gson();
+            Note passedInNote = gson.fromJson(serializedNote, Note.class);
+            String title = passedInNote != null ? passedInNote.getTitle() : getString(R.string.note_detail);
+            openFragment(NoteDetailFragment.newInstance(serializedNote), title);
         }else {
-            openFragment(NoteEditorFragment.newInstance(""), getString(R.string.note_editor));
+            finish();
         }
     }
-
 
     private void openFragment(Fragment fragment, String screenTitle){
         getSupportFragmentManager()
@@ -38,16 +47,10 @@ public class AddNoteActivity extends AppCompatActivity {
         getSupportActionBar().setTitle(screenTitle);
     }
 
-
-    @Override
-    public void onBackPressed() {
-        int count = getFragmentManager().getBackStackEntryCount();
-        if (count == 0) {
-            super.onBackPressed();
-            //additional code
-        } else {
-            getFragmentManager().popBackStack();
-        }
+    public static Intent getStartIntent(final Context context, final String serializedNote) {
+        Intent intent = new Intent(context, NoteDetailActivity.class);
+        intent.putExtra(Constants.SERIALIZED_NOTE, serializedNote);
+        return intent;
     }
 
 

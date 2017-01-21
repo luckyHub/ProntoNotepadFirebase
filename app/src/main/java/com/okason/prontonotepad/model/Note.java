@@ -14,6 +14,7 @@ public class Note {
     private long nextReminder;
     private String audioPath;
     private String imagePath;
+    private String categoryName;
     private String categoryId;
     private String noteType;
 
@@ -95,5 +96,13 @@ public class Note {
 
     public void setNextReminder(long nextReminder) {
         this.nextReminder = nextReminder;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 }

@@ -329,6 +329,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void showTwoPane(Note note){
+//        findViewById(R.id.note_detail_container).setVisibility(View.VISIBLE);
+//        openDetailFragment(NoteDetailFragment.newInstance(note.getId()), note.getTitle());
+    }
+
+
 
 
 

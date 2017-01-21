@@ -12,5 +12,19 @@
         android:paddingRight="@dimen/margin_padding_small"
         android:paddingTop="@dimen/margin_padding_small" />
 
+    <TextView
+        android:id="@+id/empty_text"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:padding="@dimen/margin_padding_normal"
+        android:gravity="center"
+        android:textStyle="italic"
+        android:visibility="gone"
+        android:textSize="@dimen/text_size_huge"
+        android:textColor="@color/primary_dark"
+        android:text="@string/no_notes_found"
+        android:fontFamily="sans-serif-condensed"/>
+
+
 </FrameLayout>
 

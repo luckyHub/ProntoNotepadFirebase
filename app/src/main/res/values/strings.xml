@@ -78,5 +78,12 @@
     <string name="action_yes">Ok</string>
     <string name="action_cancel">Cancel</string>
     <string name="title_activity_category">CategoryActivity</string>
+    <string name="title_activity_note_details">NoteDetailsActivity</string>
+    <string name="category">Category</string>
+    <string name="action_edit">Play</string>
+    <string name="action_play">Play</string>
+    <string name="note_detail">Note Detail</string>
+    <string name="action_send">Send</string>
+    <string name="action_nfc">NFC Beam</string>
 
 </resources>

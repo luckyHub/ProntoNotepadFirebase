@@ -1,7 +1,7 @@
 package com.okason.prontonotepad.ui.addNote;
 
 
-import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -27,6 +27,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.okason.prontonotepad.MainActivity;
 import com.okason.prontonotepad.R;
 import com.okason.prontonotepad.listeners.OnCategorySelectedListener;
 import com.okason.prontonotepad.model.Category;
@@ -46,7 +47,7 @@ import butterknife.OnClick;
  */
 public class NoteEditorFragment extends Fragment {
 
-    private boolean mEditMode;
+    private boolean isInEditMode;
     private Note mCurrentNote = null;
     private Category mCurrentCategory = null;
     private View mRootView;
@@ -61,7 +62,7 @@ public class NoteEditorFragment extends Fragment {
     private DatabaseReference mDatabase;
     private DatabaseReference noteCloudReference;
     private DatabaseReference categoryCloudReference;
-    private DatabaseReference noteCategoryCloudReference;
+
 
     @BindView(R.id.edit_text_category) EditText mCategory;
     @BindView(R.id.edit_text_title) EditText mTitle;
@@ -91,13 +92,13 @@ public class NoteEditorFragment extends Fragment {
 
     public void getCurrentNote(){
         Bundle args = getArguments();
-        if (args != null && args.containsKey(Constants.SERIALIZED_CATEGORY)){
-            String serializedNote = args.getString(Constants.SERIALIZED_CATEGORY, "");
+        if (args != null && args.containsKey(Constants.SERIALIZED_NOTE)){
+            String serializedNote = args.getString(Constants.SERIALIZED_NOTE, "");
             if (!serializedNote.isEmpty()){
                 Gson gson = new Gson();
                 mCurrentNote = gson.fromJson(serializedNote, new TypeToken<Note>(){}.getType());
                 if (mCurrentNote != null & !TextUtils.isEmpty(mCurrentNote.getNoteId())){
-                    mEditMode = true;
+                    isInEditMode = true;
                 }
             }
         }
@@ -145,7 +146,7 @@ public class NoteEditorFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (mEditMode){
+        if (isInEditMode){
             populateNote(mCurrentNote);
         }
     }
@@ -153,15 +154,17 @@ public class NoteEditorFragment extends Fragment {
     public void populateNote(Note note) {
         mTitle.setText(note.getTitle());
         mTitle.setHint(R.string.placeholder_note_title);
-        mCategory.setText(getCategoryName(note.getCategoryId()));
         mContent.setText(note.getContent());
         mContent.setHint(R.string.placeholder_note_text);
+        if (!TextUtils.isEmpty(note.getCategoryName())){
+            mCategory.setText(note.getCategoryName());
+        }else {
+            mCategory.setText(Constants.DEFAULT_CATEGORY);
+        }
 
     }
 
-    private String getCategoryName(String categoryId) {
-        return "";
-    }
+
 
     @OnClick(R.id.edit_text_category)
     public void showSelectCategory(){
@@ -190,7 +193,6 @@ public class NoteEditorFragment extends Fragment {
     private void validateAndSaveContent() {
 
         if (mCurrentCategory == null) {
-            mCategory.setText(Constants.DEFAULT_CATEGORY);
             addCategoryToFirebase(Constants.DEFAULT_CATEGORY);
             makeToast("Default Category added");
         }
@@ -206,42 +208,67 @@ public class NoteEditorFragment extends Fragment {
             mContent.setError(getString(R.string.note_is_required));
             return;
         }
-
         addNoteToFirebase();
 
     }
 
-    private void addCategoryToFirebase(String category) {
+    private void addNoteToFirebase() {
+        if (isInEditMode && mCurrentNote != null){
+            mCurrentNote.setContent(mContent.getText().toString());
+            mCurrentNote.setTitle(mTitle.getText().toString());
+            if (mCurrentCategory != null) {
+                mCurrentNote.setCategoryName(mCurrentCategory.getCategoryName());
+                mCurrentNote.setCategoryId(mCurrentCategory.getCategoryId());
+            }else {
+                mCurrentNote.setCategoryName(Constants.DEFAULT_CATEGORY);
+                mCurrentNote.setCategoryId(getCategoryId(Constants.DEFAULT_CATEGORY));
+            }
+            mCurrentNote.setDateModified(System.currentTimeMillis());
+            noteCloudReference.child(mCurrentNote.getNoteId()).setValue(mCurrentNote);
+            makeToast("Note updated");
+
+        } else {
+            Note note = new Note();
+            note.setNoteType(Constants.NOTE_TYPE_TEXT);
+            if (mCurrentCategory != null) {
+                note.setCategoryName(mCurrentCategory.getCategoryName());
+                note.setCategoryId(mCurrentCategory.getCategoryId());
+            }else {
+                note.setCategoryName(Constants.DEFAULT_CATEGORY);
+                note.setCategoryId(getCategoryId(Constants.DEFAULT_CATEGORY));
+            }
+            note.setContent(mContent.getText().toString());
+            note.setTitle(mTitle.getText().toString());
+            String key = noteCloudReference.push().getKey();
+            note.setNoteId(key);
+            note.setDateCreated(System.currentTimeMillis());
+            note.setDateModified(System.currentTimeMillis());
+            noteCloudReference.child(key).setValue(note);
+            makeToast("Note added");
+        }
+        startActivity(new Intent(getActivity(), MainActivity.class));
+
+    }
+
+    private String getCategoryId(String categoryName) {
+        for (Category category: mCategories){
+            if (!TextUtils.isEmpty(category.getCategoryId()) && category.getCategoryName().equals(categoryName)){
+                return category.getCategoryId();
+            }
+        }
+        return addCategoryToFirebase(categoryName);
+    }
+
+
+    private String addCategoryToFirebase(String category) {
         Category cat = new Category();
         cat.setCategoryName(category);
         String key = categoryCloudReference.push().getKey();
         cat.setCategoryId(key);
         categoryCloudReference.child(key).setValue(cat);
-        mCurrentCategory = cat;
+        return key;
     }
 
-    private void addNoteToFirebase() {
-
-        Note note = new Note();
-        note.setNoteType(Constants.NOTE_TYPE_TEXT);
-        if (mCurrentCategory != null) {
-            note.setCategoryId(mCurrentCategory.getCategoryId());
-        }
-        note.setContent(mContent.getText().toString());
-        note.setTitle(mTitle.getText().toString());
-
-        String key = noteCloudReference.push().getKey();
-        note.setNoteId(key);
-        noteCloudReference.child(key).setValue(note);
-
-
-
-
-        makeToast("Note added");
-        getActivity().setResult(Activity.RESULT_OK);
-        getActivity().finish();
-
-    }
 
 
     private void makeToast(String message){
