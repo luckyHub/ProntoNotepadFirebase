@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "559478564757-t43q2qhn38ago9k5dvqp0qpagnapr2n8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.okason.prontonotepad",
+            "certificate_hash": "0E4C03D8AECBAC0B3AC3361D242681DFEDFEDC64"
+          }
+        },
+        {
           "client_id": "559478564757-n92j6te54ip2k3b78ds9bfefjsafl3mk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

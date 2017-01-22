@@ -12,8 +12,12 @@ public class Note {
     private long dateCreated;
     private long dateModified;
     private long nextReminder;
-    private String audioPath;
-    private String imagePath;
+    private String localAudioPath;
+    private boolean cloudAudioExists;
+    private String localImagePath;
+    private boolean cloudImageExists;
+    private String localSketchImagePath;
+    private boolean cloudSketchExists;
     private String categoryName;
     private String categoryId;
     private String noteType;
@@ -58,20 +62,54 @@ public class Note {
         this.dateModified = dateModified;
     }
 
-    public String getAudioPath() {
-        return audioPath;
+    public String getLocalAudioPath() {
+        return localAudioPath;
     }
 
-    public void setAudioPath(String audioPath) {
-        this.audioPath = audioPath;
+    public void setLocalAudioPath(String localAudioPath) {
+        this.localAudioPath = localAudioPath;
     }
 
-    public String getImagePath() {
-        return imagePath;
+
+    public String getLocalImagePath() {
+        return localImagePath;
     }
 
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
+    public void setLocalImagePath(String localImagePath) {
+        this.localImagePath = localImagePath;
+    }
+
+
+    public String getLocalSketchImagePath() {
+        return localSketchImagePath;
+    }
+
+    public void setLocalSketchImagePath(String localSketchImagePath) {
+        this.localSketchImagePath = localSketchImagePath;
+    }
+
+    public boolean isCloudAudioExists() {
+        return cloudAudioExists;
+    }
+
+    public void setCloudAudioExists(boolean cloudAudioExists) {
+        this.cloudAudioExists = cloudAudioExists;
+    }
+
+    public boolean isCloudImageExists() {
+        return cloudImageExists;
+    }
+
+    public void setCloudImageExists(boolean cloudImageExists) {
+        this.cloudImageExists = cloudImageExists;
+    }
+
+    public boolean isCloudSketchExists() {
+        return cloudSketchExists;
+    }
+
+    public void setCloudSketchExists(boolean cloudSketchExists) {
+        this.cloudSketchExists = cloudSketchExists;
     }
 
     public String getCategoryId() {

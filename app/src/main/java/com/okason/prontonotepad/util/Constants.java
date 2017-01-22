@@ -34,5 +34,22 @@ public class Constants {
 
     public final static String SELECTED_CATEGORY_ID = "selected_category_id";
     public static final String SERIALIZED_NOTE = "serialized_note";
-    public static final String RECORD_FOLDER = "ProntoNote/Records";
+    public static final String ATTACHMENTS_FOLDER = "ProntoNote/Attachments";
+
+
+    public final static String MIME_TYPE_IMAGE = "image/jpeg";
+    public final static String MIME_TYPE_AUDIO = "audio/amr";
+    public final static String MIME_TYPE_VIDEO = "video/mp4";
+    public final static String MIME_TYPE_SKETCH = "image/png";
+    public final static String MIME_TYPE_FILES = "file/*";
+
+    public final static String MIME_TYPE_IMAGE_EXT = ".jpeg";
+    public final static String MIME_TYPE_AUDIO_EXT = ".amr";
+    public final static String MIME_TYPE_VIDEO_EXT = ".mp4";
+    public final static String MIME_TYPE_SKETCH_EXT = ".png";
+    public final static String MIME_TYPE_CONTACT_EXT = ".vcf";
+
+    public static final String FIREBASE_STORAGE_BUCKET = "gs://prontonotepad.appspot.com";
+    public static final String STORAGE_CLOUD_END_POINT_IMAGES = "users/images";
+    public static final String STORAGE_CLOUD_END_POINT_AUDIO = "users/audio";
 }

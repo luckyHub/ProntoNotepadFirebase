@@ -74,7 +74,7 @@
             android:layout_gravity="center_vertical"
             android:layout_margin="@dimen/margin_padding_tiny"
             android:background="@null"
-            android:src="@drawable/edit_button"/>
+            android:src="@drawable/ic_mode_edit_white_36dp"/>
     </LinearLayout>
 
 </LinearLayout>
