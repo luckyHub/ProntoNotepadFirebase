@@ -99,5 +99,7 @@
     <string name="error_no_camera">No camera found</string>
     <string name="unable_to_get_image">Unable to capture image</string>
     <string name="image_attachment">Image</string>
+    <string name="save">Save</string>
+    <string name="erase">Erase</string>
 
 </resources>

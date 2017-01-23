@@ -70,6 +70,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.okason.prontonotepad.MainActivity" />
         </activity>
+        <activity android:name=".ui.sketch.SketchActivity"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"/>
+
     </application>
 
 </manifest>

@@ -13,7 +13,6 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -45,6 +44,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.google.gson.Gson;
@@ -56,6 +56,7 @@ import com.okason.prontonotepad.model.Attachment;
 import com.okason.prontonotepad.model.Category;
 import com.okason.prontonotepad.model.Note;
 import com.okason.prontonotepad.ui.category.SelectCategoryDialogFragment;
+import com.okason.prontonotepad.ui.sketch.SketchActivity;
 import com.okason.prontonotepad.util.Constants;
 import com.okason.prontonotepad.util.FileUtils;
 import com.okason.prontonotepad.util.TimeUtils;
@@ -90,9 +91,7 @@ public class NoteEditorFragment extends Fragment {
     private FirebaseUser mFirebaseUser;
     private FirebaseStorage mFirebaseStorage;
     private StorageReference mFirebaseStorageReference;
-    private StorageReference mImageStorageReference;
-    private StorageReference mAudioStorageReference;
-
+    private StorageReference mAttachmentStorageReference;
 
     private DatabaseReference mDatabase;
     private DatabaseReference noteCloudReference;
@@ -100,7 +99,8 @@ public class NoteEditorFragment extends Fragment {
 
     private final int EXTERNAL_PERMISSION_REQUEST = 1;
     private final int RECORD_AUDIO_PERMISSION_REQUEST = 2;
-    private final int IMAGE_CAPTURE_PERMISSION_REQUEST = 3;
+    private final int IMAGE_CAPTURE_REQUEST = 3;
+    private final int SKETCH_CAPTURE_REQUEST = 4;
 
 
     @BindView(R.id.edit_text_category) EditText mCategory;
@@ -174,9 +174,7 @@ public class NoteEditorFragment extends Fragment {
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
         mFirebaseStorage = FirebaseStorage.getInstance();
         mFirebaseStorageReference = mFirebaseStorage.getReferenceFromUrl(Constants.FIREBASE_STORAGE_BUCKET);
-
-        mAudioStorageReference = mFirebaseStorageReference.child("users/" + mFirebaseUser.getUid() + "/audio");
-        mImageStorageReference = mFirebaseStorageReference.child("users/" + mFirebaseUser.getUid() + "/images");
+        mAttachmentStorageReference = mFirebaseStorageReference.child("users/" + mFirebaseUser.getUid() + "/attachments");
 
         noteCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT + mFirebaseUser.getUid() + Constants.NOTE_CLOUD_END_POINT);
         categoryCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT + mFirebaseUser.getUid() + Constants.CATEGORY_CLOUD_END_POINT);
@@ -192,70 +190,11 @@ public class NoteEditorFragment extends Fragment {
                     }
                 }
             }
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
             }
         });
-
-//        mToolbarBottom = (Toolbar)mRootView.findViewById(R.id.toolbar_bottom);
-//        mToolbarBottom.setVisibility(View.VISIBLE);
-//        mToolbarBottom.getMenu().clear();
-//        mToolbarBottom.inflateMenu(R.menu.menu_note_editor_bottom);
-//
-//
-//        mToolbarBottom.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-//            @Override
-//            public boolean onMenuItemClick(MenuItem item) {
-//                int id = item.getItemId();
-//                PackageManager packageManager = getActivity().getPackageManager();
-//                switch (id) {
-//                    case R.id.action_delete:
-//                        if (isInEditMode && mCurrentNote != null){
-//                            promptForDelete(mCurrentNote);
-//                        }else {
-//                            promptForDiscard();
-//                        }
-//                        break;
-//                    case R.id.action_share:
-//                        displayShareIntent();
-//                        break;
-//                    case R.id.action_camera:
-//                       //show camera intent
-//                        if (packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
-//                            if (isStoragePermissionGranted()) {
-//                                if (isRecordPermissionGranted()) {
-//                                    takePhoto();
-//                                }
-//                            }
-//                        } else {
-//                            makeToast(getContext().getString(R.string.error_no_camera));
-//                        }
-//                        break;
-//                    case R.id.action_record:
-//                        if (packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
-//                            if (isStoragePermissionGranted()) {
-//                                if (isRecordPermissionGranted()) {
-//                                    promptToStartRecording();
-//                                }
-//                            }
-//                        } else {
-//                            makeToast(getContext().getString(R.string.error_no_mic));
-//                        }
-//                        break;
-//                    case R.id.action_play:
-//                        if (mLocalAudioFilePath == null){
-//                            makeToast("No Recording found");
-//                        }else{
-//                            startPlaying();
-//                        }
-//
-//                }
-//                return true;
-//            }
-//        });
-
         return mRootView;
     }
 
@@ -312,10 +251,58 @@ public class NoteEditorFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        PackageManager packageManager = getActivity().getPackageManager();
+        switch (item.getItemId()) {
             case R.id.action_save:
                 validateAndSaveContent();
                 break;
+            case R.id.action_delete:
+                if (isInEditMode && mCurrentNote != null) {
+                    promptForDelete(mCurrentNote);
+                } else {
+                    promptForDiscard();
+                }
+                break;
+            case R.id.action_share:
+                displayShareIntent();
+                break;
+            case R.id.action_camera:
+                //show camera intent
+                if (packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
+                    if (isStoragePermissionGranted()) {
+                        if (isRecordPermissionGranted()) {
+                            takePhoto();
+                        }
+                    }
+                } else {
+                    makeToast(getContext().getString(R.string.error_no_camera));
+                }
+                break;
+            case R.id.action_record:
+                if (packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
+                    if (isStoragePermissionGranted()) {
+                        if (isRecordPermissionGranted()) {
+                            promptToStartRecording();
+                        }
+                    }
+                } else {
+                    makeToast(getContext().getString(R.string.error_no_mic));
+                }
+                break;
+            case R.id.action_play:
+                if (mLocalAudioFilePath == null) {
+                    makeToast("No Recording found");
+                } else {
+                    startPlaying();
+                }
+                break;
+            case R.id.action_sketch:
+                if (isStoragePermissionGranted()) {
+                    Intent sketchIntent = new Intent(getActivity(), SketchActivity.class);
+                    startActivityForResult(sketchIntent, SKETCH_CAPTURE_REQUEST);
+                }
+                break;
+
         }
         return super.onOptionsItemSelected(item);
     }
@@ -680,14 +667,28 @@ public class NoteEditorFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == IMAGE_CAPTURE_PERMISSION_REQUEST && resultCode == Activity.RESULT_OK) {
-            addPhotoToGallery();
-            populateImage(mLocalImagePath, false);
-            uploadFileToCloud(mLocalImagePath);
-        } else {
-            makeToast("Image Capture Failed");
+        if (resultCode == Activity.RESULT_OK ){
+            switch (requestCode){
+                case IMAGE_CAPTURE_REQUEST:
+                    addPhotoToGallery();
+                    populateImage(mLocalImagePath, false);
+                    uploadFileToCloud(mLocalImagePath, Constants.MIME_TYPE_IMAGE);
+                    break;
+                case SKETCH_CAPTURE_REQUEST:
+                    Uri uri = data.getData();
+                    String filePath = FileUtils.getRealPathFromURI(uri, getContext());
+                    if (!TextUtils.isEmpty(filePath)) {
+                        populateSketch(filePath, false);
+                        uploadFileToCloud(filePath, Constants.MIME_TYPE_SKETCH);
+                    }else {
+                        makeToast("Sketch is empty");
+                    }
 
+                    break;
+
+            }
         }
+
     }
 
     private void addPhotoToGallery() {
@@ -703,7 +704,8 @@ public class NoteEditorFragment extends Fragment {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         File photoFile = null;
         try {
-            photoFile = createImageFile();
+            photoFile = FileUtils.createImageFile();
+            mLocalImagePath = photoFile.getAbsolutePath();
         } catch (IOException ex) {
             // Error occurred while creating the File
             makeToast("There was a problem saving the photo...");
@@ -714,7 +716,7 @@ public class NoteEditorFragment extends Fragment {
             mImageURI = fileUri;
             mLocalImagePath = fileUri.getPath();
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mImageURI);
-            startActivityForResult(takePictureIntent, IMAGE_CAPTURE_PERMISSION_REQUEST);
+            startActivityForResult(takePictureIntent, IMAGE_CAPTURE_REQUEST);
         };
     }
 
@@ -723,7 +725,7 @@ public class NoteEditorFragment extends Fragment {
         mImageAttachment.setVisibility(View.VISIBLE);
         if (isCloudImage) {
             Uri fileToDownload = Uri.fromFile(new File(mLocalImagePath));
-            StorageReference imageRef = mImageStorageReference.child(fileToDownload.getLastPathSegment());
+            StorageReference imageRef = mAttachmentStorageReference.child(fileToDownload.getLastPathSegment());
             Glide.with(getContext())
                     .using(new FirebaseImageLoader())
                     .load(imageRef)
@@ -745,7 +747,7 @@ public class NoteEditorFragment extends Fragment {
         mSketchAttachment.setVisibility(View.VISIBLE);
         if (isCloudImage) {
             Uri fileToDownload = Uri.fromFile(new File(mLocalImagePath));
-            StorageReference imageRef = mImageStorageReference.child(fileToDownload.getLastPathSegment());
+            StorageReference imageRef = mAttachmentStorageReference.child(fileToDownload.getLastPathSegment());
             Glide.with(getContext())
                     .using(new FirebaseImageLoader())
                     .load(imageRef)
@@ -764,50 +766,34 @@ public class NoteEditorFragment extends Fragment {
     }
 
 
-    /**
-     * Creates the image file to which the image must be saved.
-     * @return
-     * @throws IOException
-     */
-    protected File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = TimeUtils.getDatetimeSuffix(System.currentTimeMillis());
-        String imageFileName = "Image_" + timeStamp + "_";
-        File storageDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
-
-        // Save a file: path for use with ACTION_VIEW intents
-        mLocalImagePath = image.getAbsolutePath();
-        return image;
-    }
-
-
-    private void uploadFileToCloud(String filePath){
-
+    private void uploadFileToCloud(String filePath, final String filetType){
+        StorageMetadata metadata = new StorageMetadata.Builder()
+                .setContentType(filetType)
+                .build();
 
         Uri fileToUpload = Uri.fromFile(new File(filePath));
 
-        String fileName = fileToUpload.getLastPathSegment();
+        final String fileName = fileToUpload.getLastPathSegment();
 
-        StorageReference imageRef = mImageStorageReference.child(fileName);
+        StorageReference imageRef = mAttachmentStorageReference.child(fileName);
 
-        UploadTask uploadTask = imageRef.putFile(fileToUpload);
+        UploadTask uploadTask = imageRef.putFile(fileToUpload, metadata);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                makeToast("Unable to upload image to cloud" + e.getLocalizedMessage());
+                makeToast("Unable to upload file to cloud" + e.getLocalizedMessage());
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                imageUploadedToCloud = true;
-                Log.d(LOG_TAG, "URL: " + taskSnapshot.getDownloadUrl());
-                makeToast("Image uploaded successfully");
+                if (filetType.equals(Constants.MIME_TYPE_AUDIO)){
+                    audioUploadedToCloud = true;
+                }else if (filetType.equals(Constants.MIME_TYPE_IMAGE)){
+                    imageUploadedToCloud = true;
+                }else if (filetType.equals(Constants.MIME_TYPE_SKETCH)){
+                    sketchUploadedToCloud = true;
+                }
+                makeToast("File uploaded successfully");
             }
         });
 
