@@ -134,13 +134,24 @@
                         android:contentDescription="@string/image_attachment"
                         android:visibility="gone" />
 
+                    <ImageView
+                        android:id="@+id/sketch_attachment"
+                        android:layout_width="wrap_content"
+                        android:layout_height="200dp"
+                        android:background="@null"
+                        android:contentDescription="@string/image_attachment"
+                        android:visibility="gone" />
+
                 </LinearLayout>
             </ScrollView>
 
 
         </android.support.design.widget.CoordinatorLayout>
 
-
     </LinearLayout>
+
+
+
+
 
 </RelativeLayout>

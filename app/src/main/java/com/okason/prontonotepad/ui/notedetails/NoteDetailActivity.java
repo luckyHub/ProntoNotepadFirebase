@@ -10,7 +10,9 @@ import android.support.v7.widget.Toolbar;
 
 import com.google.gson.Gson;
 import com.okason.prontonotepad.R;
+import com.okason.prontonotepad.listeners.OnEditNoteButtonClickedListener;
 import com.okason.prontonotepad.model.Note;
+import com.okason.prontonotepad.ui.addNote.AddNoteActivity;
 import com.okason.prontonotepad.util.Constants;
 
 public class NoteDetailActivity extends AppCompatActivity {
@@ -25,13 +27,24 @@ public class NoteDetailActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        final Gson gson = new Gson();
 
         if (getIntent() != null && getIntent().hasExtra(Constants.SERIALIZED_NOTE)){
             String serializedNote = getIntent().getStringExtra(Constants.SERIALIZED_NOTE);
-            Gson gson = new Gson();
             Note passedInNote = gson.fromJson(serializedNote, Note.class);
             String title = passedInNote != null ? passedInNote.getTitle() : getString(R.string.note_detail);
-            openFragment(NoteDetailFragment.newInstance(serializedNote), title);
+            NoteDetailFragment fragment = NoteDetailFragment.newInstance(serializedNote);
+            fragment.setmListener(new OnEditNoteButtonClickedListener() {
+                @Override
+                public void onEditNote(Note clickedNote) {
+                    String serializedNote = gson.toJson(clickedNote);
+                    Intent editNoteIntent = new Intent(NoteDetailActivity.this, AddNoteActivity.class);
+                    editNoteIntent.putExtra(Constants.SERIALIZED_NOTE, serializedNote);
+                    startActivity(editNoteIntent);
+                }
+            });
+
+            openFragment(fragment, title);
         }else {
             finish();
         }

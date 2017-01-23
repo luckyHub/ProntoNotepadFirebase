@@ -1,7 +1,6 @@
 package com.okason.prontonotepad.ui.notedetails;
 
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -20,8 +19,8 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.okason.prontonotepad.R;
+import com.okason.prontonotepad.listeners.OnEditNoteButtonClickedListener;
 import com.okason.prontonotepad.model.Note;
-import com.okason.prontonotepad.ui.addNote.AddNoteActivity;
 import com.okason.prontonotepad.util.Constants;
 
 import butterknife.BindView;
@@ -46,6 +45,7 @@ public class NoteDetailFragment extends Fragment {
     private View mRootView;
     private Note mCurrentNote = null;
     private Toolbar mToolbarBottom;
+    private OnEditNoteButtonClickedListener mListener;
 
 
     public NoteDetailFragment() {
@@ -88,17 +88,6 @@ public class NoteDetailFragment extends Fragment {
         ButterKnife.bind(this, mRootView);
         displayReadOnlyViews();
 
-        mToolbarBottom = (Toolbar)getActivity().findViewById(R.id.toolbar_bottom);
-        mToolbarBottom.getMenu().clear();
-        mToolbarBottom.inflateMenu(R.menu.menu_note_detail_bottom);
-
-        mToolbarBottom.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                return false;
-            }
-        });
-
         return mRootView;
     }
 
@@ -109,6 +98,7 @@ public class NoteDetailFragment extends Fragment {
             displayNote(mCurrentNote);
         }
     }
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -123,12 +113,8 @@ public class NoteDetailFragment extends Fragment {
         int id = item.getItemId();
         switch (id){
             case R.id.action_edit:
-                if (mCurrentNote != null){
-                    Gson gson = new Gson();
-                    String serializedNote = gson.toJson(mCurrentNote);
-                    Intent editNoteIntent = new Intent(getActivity(), AddNoteActivity.class);
-                    editNoteIntent.putExtra(Constants.SERIALIZED_NOTE, serializedNote);
-                    startActivity(editNoteIntent);
+                if (mListener != null){
+                    mListener.onEditNote(mCurrentNote);
                 }
                 break;
 
@@ -159,4 +145,12 @@ public class NoteDetailFragment extends Fragment {
         snackbar.show();
     }
 
+
+    public OnEditNoteButtonClickedListener getmListener() {
+        return mListener;
+    }
+
+    public void setmListener(OnEditNoteButtonClickedListener mListener) {
+        this.mListener = mListener;
+    }
 }

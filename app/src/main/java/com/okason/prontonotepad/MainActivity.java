@@ -26,6 +26,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
@@ -38,11 +39,14 @@ import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.mikepenz.materialdrawer.util.KeyboardUtil;
 import com.okason.prontonotepad.auth.AuthUiActivity;
+import com.okason.prontonotepad.listeners.OnEditNoteButtonClickedListener;
 import com.okason.prontonotepad.model.Category;
 import com.okason.prontonotepad.model.Note;
 import com.okason.prontonotepad.model.SampleData;
 import com.okason.prontonotepad.ui.addNote.AddNoteActivity;
+import com.okason.prontonotepad.ui.addNote.NoteEditorFragment;
 import com.okason.prontonotepad.ui.category.CategoryActivity;
+import com.okason.prontonotepad.ui.notedetails.NoteDetailFragment;
 import com.okason.prontonotepad.ui.notes.NoteListFragment;
 import com.okason.prontonotepad.util.Constants;
 
@@ -60,6 +64,12 @@ public class MainActivity extends AppCompatActivity {
     private Activity mActivity;
     private SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
+
+    /**
+     * Whether or not the activity is in two-pane mode, i.e. running on a tablet
+     * device.
+     */
+    private boolean mTwoPane;
 
 
 
@@ -93,6 +103,16 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mActivity = this;
+
+        if (findViewById(R.id.note_detail_container) != null) {
+            // The detail container view will be present only in the
+            // large-screen layouts (res/values-w800dp).
+            // If this view is present, then the
+            // activity should be in two-pane mode.
+            mTwoPane = true;
+            findViewById(R.id.note_detail_container).setVisibility(View.GONE);
+        }
+
 
 
 
@@ -129,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         addDefaultData();
-        openFragment(new NoteListFragment(), "Notes");
+        openFragment(NoteListFragment.newInstance(mTwoPane), "Notes");
     }
 
 
@@ -318,6 +338,16 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setTitle(screenTitle);
     }
 
+    private void openDetailFragment(Fragment fragment, String screenTitle){
+        getSupportFragmentManager()
+                .beginTransaction()
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .replace(R.id.note_detail_container, fragment)
+                .addToBackStack(null)
+                .commit();
+        getSupportActionBar().setTitle(screenTitle);
+    }
+
     private void addDefaultData() {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -330,8 +360,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showTwoPane(Note note){
-//        findViewById(R.id.note_detail_container).setVisibility(View.VISIBLE);
-//        openDetailFragment(NoteDetailFragment.newInstance(note.getId()), note.getTitle());
+        findViewById(R.id.note_detail_container).setVisibility(View.VISIBLE);
+        Gson gson = new Gson();
+        String serializedNote = gson.toJson(note);
+        String title = note != null ? note.getTitle() : getString(R.string.note_detail);
+        NoteDetailFragment fragment = NoteDetailFragment.newInstance(serializedNote);
+        fragment.setmListener(new OnEditNoteButtonClickedListener() {
+            @Override
+            public void onEditNote(Note clickedNote) {
+                if (clickedNote != null){
+                    Gson gson = new Gson();
+                    String serializedNote = gson.toJson(clickedNote);
+                    String title = TextUtils.isEmpty(clickedNote.getTitle()) ?  getString(R.string.note_editor): clickedNote.getTitle();
+                    openDetailFragment(NoteEditorFragment.newInstance(serializedNote), title);
+                }
+            }
+        });
+        openDetailFragment(fragment, title);
     }
 
 

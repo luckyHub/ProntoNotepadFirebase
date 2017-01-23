@@ -17,6 +17,7 @@ import com.amulyakhare.textdrawable.TextDrawable;
 import com.amulyakhare.textdrawable.util.ColorGenerator;
 import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -65,6 +66,15 @@ public class NoteListFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
+    }
+
+
+    public static NoteListFragment newInstance(boolean dualScreen){
+        NoteListFragment fragment = new NoteListFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(Constants.IS_DUAL_SCREEN, dualScreen);
+        fragment.setArguments(args);
+        return fragment;
     }
 
 
@@ -179,6 +189,10 @@ public class NoteListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        Bundle args = getArguments();
+        if (args  != null && args.containsKey(Constants.IS_DUAL_SCREEN)){
+            isDualScreen = args.getBoolean(Constants.IS_DUAL_SCREEN);
+        }
         showEmptyText();
     }
 
@@ -220,7 +234,14 @@ public class NoteListFragment extends Fragment {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (!TextUtils.isEmpty(note.getNoteId())) {
-                    noteCloudReference.child(note.getNoteId()).removeValue();
+                    noteCloudReference.child(note.getNoteId()).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            if (mNoteFirebaseAdapter.getItemCount() < 1){
+                                showEmptyText();
+                            }
+                        }
+                    });
                 }
             }
         });

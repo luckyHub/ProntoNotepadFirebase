@@ -52,4 +52,5 @@ public class Constants {
     public static final String FIREBASE_STORAGE_BUCKET = "gs://prontonotepad.appspot.com";
     public static final String STORAGE_CLOUD_END_POINT_IMAGES = "users/images";
     public static final String STORAGE_CLOUD_END_POINT_AUDIO = "users/audio";
+    public static final String IS_DUAL_SCREEN = "is_dual_screen";
 }

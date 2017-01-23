@@ -63,8 +63,6 @@ import com.okason.prontonotepad.util.TimeUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import butterknife.BindView;
@@ -109,6 +107,7 @@ public class NoteEditorFragment extends Fragment {
     @BindView(R.id.edit_text_title) EditText mTitle;
     @BindView(R.id.edit_text_note) EditText mContent;
     @BindView(R.id.image_attachment) ImageView mImageAttachment;
+    @BindView(R.id.sketch_attachment) ImageView mSketchAttachment;
 
     private MediaRecorder mRecorder = null;
     private MediaPlayer   mPlayer = null;
@@ -117,6 +116,8 @@ public class NoteEditorFragment extends Fragment {
     private boolean audioUploadedToCloud = false;
     private String mLocalImagePath = null;
     private boolean imageUploadedToCloud = false;
+    private String mLocalSketchPath = null;
+    private boolean sketchUploadedToCloud = false;
 
     private Uri mImageURI = null;
 
@@ -174,8 +175,8 @@ public class NoteEditorFragment extends Fragment {
         mFirebaseStorage = FirebaseStorage.getInstance();
         mFirebaseStorageReference = mFirebaseStorage.getReferenceFromUrl(Constants.FIREBASE_STORAGE_BUCKET);
 
-        mAudioStorageReference = mFirebaseStorageReference.child(Constants.STORAGE_CLOUD_END_POINT_AUDIO);
-        mImageStorageReference = mFirebaseStorageReference.child(Constants.STORAGE_CLOUD_END_POINT_IMAGES);
+        mAudioStorageReference = mFirebaseStorageReference.child("users/" + mFirebaseUser.getUid() + "/audio");
+        mImageStorageReference = mFirebaseStorageReference.child("users/" + mFirebaseUser.getUid() + "/images");
 
         noteCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT + mFirebaseUser.getUid() + Constants.NOTE_CLOUD_END_POINT);
         categoryCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT + mFirebaseUser.getUid() + Constants.CATEGORY_CLOUD_END_POINT);
@@ -198,61 +199,62 @@ public class NoteEditorFragment extends Fragment {
             }
         });
 
-        mToolbarBottom = (Toolbar)getActivity().findViewById(R.id.toolbar_bottom);
-        mToolbarBottom.getMenu().clear();
-        mToolbarBottom.inflateMenu(R.menu.menu_note_editor_bottom);
-
-
-        mToolbarBottom.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                int id = item.getItemId();
-                PackageManager packageManager = getActivity().getPackageManager();
-                switch (id) {
-                    case R.id.action_delete:
-                        if (isInEditMode && mCurrentNote != null){
-                            promptForDelete(mCurrentNote);
-                        }else {
-                            promptForDiscard();
-                        }
-                        break;
-                    case R.id.action_share:
-                        displayShareIntent();
-                        break;
-                    case R.id.action_camera:
-                       //show camera intent
-                        if (packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
-                            if (isStoragePermissionGranted()) {
-                                if (isRecordPermissionGranted()) {
-                                    takePhoto();
-                                }
-                            }
-                        } else {
-                            makeToast(getContext().getString(R.string.error_no_camera));
-                        }
-                        break;
-                    case R.id.action_record:
-                        if (packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
-                            if (isStoragePermissionGranted()) {
-                                if (isRecordPermissionGranted()) {
-                                    promptToStartRecording();
-                                }
-                            }
-                        } else {
-                            makeToast(getContext().getString(R.string.error_no_mic));
-                        }
-                        break;
-                    case R.id.action_play:
-                        if (mLocalAudioFilePath == null){
-                            makeToast("No Recording found");
-                        }else{
-                            startPlaying();
-                        }
-
-                }
-                return true;
-            }
-        });
+//        mToolbarBottom = (Toolbar)mRootView.findViewById(R.id.toolbar_bottom);
+//        mToolbarBottom.setVisibility(View.VISIBLE);
+//        mToolbarBottom.getMenu().clear();
+//        mToolbarBottom.inflateMenu(R.menu.menu_note_editor_bottom);
+//
+//
+//        mToolbarBottom.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+//            @Override
+//            public boolean onMenuItemClick(MenuItem item) {
+//                int id = item.getItemId();
+//                PackageManager packageManager = getActivity().getPackageManager();
+//                switch (id) {
+//                    case R.id.action_delete:
+//                        if (isInEditMode && mCurrentNote != null){
+//                            promptForDelete(mCurrentNote);
+//                        }else {
+//                            promptForDiscard();
+//                        }
+//                        break;
+//                    case R.id.action_share:
+//                        displayShareIntent();
+//                        break;
+//                    case R.id.action_camera:
+//                       //show camera intent
+//                        if (packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
+//                            if (isStoragePermissionGranted()) {
+//                                if (isRecordPermissionGranted()) {
+//                                    takePhoto();
+//                                }
+//                            }
+//                        } else {
+//                            makeToast(getContext().getString(R.string.error_no_camera));
+//                        }
+//                        break;
+//                    case R.id.action_record:
+//                        if (packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
+//                            if (isStoragePermissionGranted()) {
+//                                if (isRecordPermissionGranted()) {
+//                                    promptToStartRecording();
+//                                }
+//                            }
+//                        } else {
+//                            makeToast(getContext().getString(R.string.error_no_mic));
+//                        }
+//                        break;
+//                    case R.id.action_play:
+//                        if (mLocalAudioFilePath == null){
+//                            makeToast("No Recording found");
+//                        }else{
+//                            startPlaying();
+//                        }
+//
+//                }
+//                return true;
+//            }
+//        });
 
         return mRootView;
     }
@@ -284,8 +286,13 @@ public class NoteEditorFragment extends Fragment {
         if (!TextUtils.isEmpty(note.getLocalImagePath())){
             mLocalImagePath = note.getLocalImagePath();
             imageUploadedToCloud = note.isCloudImageExists();
+            populateImage(mLocalImagePath, imageUploadedToCloud);
         }
-
+        if (!TextUtils.isEmpty(note.getLocalSketchImagePath())){
+            mLocalSketchPath = note.getLocalSketchImagePath();
+            sketchUploadedToCloud = note.isCloudSketchExists();
+            populateSketch(mLocalImagePath, sketchUploadedToCloud);
+        }
 
     }
 
@@ -333,42 +340,41 @@ public class NoteEditorFragment extends Fragment {
     }
 
     private void addNoteToFirebase() {
-        if (isInEditMode && mCurrentNote != null){
-            mCurrentNote.setContent(mContent.getText().toString());
-            mCurrentNote.setTitle(mTitle.getText().toString());
-            if (mCurrentCategory != null) {
-                mCurrentNote.setCategoryName(mCurrentCategory.getCategoryName());
-                mCurrentNote.setCategoryId(mCurrentCategory.getCategoryId());
-            }else {
-                mCurrentNote.setCategoryName(Constants.DEFAULT_CATEGORY);
-                mCurrentNote.setCategoryId(getCategoryId(Constants.DEFAULT_CATEGORY));
-            }
-            mCurrentNote.setDateModified(System.currentTimeMillis());
-            noteCloudReference.child(mCurrentNote.getNoteId()).setValue(mCurrentNote);
-            makeToast("Note updated");
-
-        } else {
-            Note note = new Note();
-            note.setNoteType(Constants.NOTE_TYPE_TEXT);
-            if (mCurrentCategory != null) {
-                note.setCategoryName(mCurrentCategory.getCategoryName());
-                note.setCategoryId(mCurrentCategory.getCategoryId());
-            }else {
-                note.setCategoryName(Constants.DEFAULT_CATEGORY);
-                note.setCategoryId(getCategoryId(Constants.DEFAULT_CATEGORY));
-            }
-            note.setContent(mContent.getText().toString());
-            note.setTitle(mTitle.getText().toString());
+        if (mCurrentNote == null){
+            mCurrentNote = new Note();
             String key = noteCloudReference.push().getKey();
-            note.setNoteId(key);
-            note.setDateCreated(System.currentTimeMillis());
-            Calendar calendar2 = GregorianCalendar.getInstance();
-            calendar2.add(Calendar.DAY_OF_WEEK, +4);
-            calendar2.add(Calendar.MILLISECOND, 10005623);
-            note.setDateModified(calendar2.getTimeInMillis());
-            noteCloudReference.child(key).setValue(note);
-            makeToast("Note added");
+            mCurrentNote.setNoteId(key);
         }
+
+        if (mCurrentCategory != null) {
+            mCurrentNote.setCategoryName(mCurrentCategory.getCategoryName());
+            mCurrentNote.setCategoryId(mCurrentCategory.getCategoryId());
+        }else {
+            mCurrentNote.setCategoryName(Constants.DEFAULT_CATEGORY);
+            mCurrentNote.setCategoryId(getCategoryId(Constants.DEFAULT_CATEGORY));
+        }
+
+
+        mCurrentNote.setContent(mContent.getText().toString());
+        mCurrentNote.setTitle(mTitle.getText().toString());
+        mCurrentNote.setDateModified(System.currentTimeMillis());
+        mCurrentNote.setCloudAudioExists(audioUploadedToCloud);
+        mCurrentNote.setCloudImageExists(imageUploadedToCloud);
+        mCurrentNote.setCloudSketchExists(sketchUploadedToCloud);
+        mCurrentNote.setLocalAudioPath(mLocalAudioFilePath);
+        mCurrentNote.setLocalImagePath(mLocalImagePath);
+        mCurrentNote.setLocalSketchImagePath(mLocalSketchPath);
+
+        if (audioUploadedToCloud){
+            mCurrentNote.setNoteType(Constants.NOTE_TYPE_AUDIO);
+        }else if (imageUploadedToCloud){
+            mCurrentNote.setNoteType(Constants.NOTE_TYPE_IMAGE);
+        }
+
+        noteCloudReference.child(mCurrentNote.getNoteId()).setValue(mCurrentNote);
+
+        String result = isInEditMode ? "Note updated" : "Note added";
+        makeToast(result);
         startActivity(new Intent(getActivity(), MainActivity.class));
 
     }
@@ -735,6 +741,28 @@ public class NoteEditorFragment extends Fragment {
         }
     }
 
+    private void populateSketch(String sketchImagePath, boolean isCloudImage) {
+        mSketchAttachment.setVisibility(View.VISIBLE);
+        if (isCloudImage) {
+            Uri fileToDownload = Uri.fromFile(new File(mLocalImagePath));
+            StorageReference imageRef = mImageStorageReference.child(fileToDownload.getLastPathSegment());
+            Glide.with(getContext())
+                    .using(new FirebaseImageLoader())
+                    .load(imageRef)
+                    .placeholder(R.drawable.default_image)
+                    .centerCrop()
+                    .into(mSketchAttachment);
+
+        }else {
+            Glide.with(getContext())
+                    .load(sketchImagePath)
+                    .placeholder(R.drawable.default_image)
+                    .centerCrop()
+                    .into(mSketchAttachment);
+
+        }
+    }
+
 
     /**
      * Creates the image file to which the image must be saved.
@@ -765,10 +793,8 @@ public class NoteEditorFragment extends Fragment {
         Uri fileToUpload = Uri.fromFile(new File(filePath));
 
         String fileName = fileToUpload.getLastPathSegment();
-        Attachment attachment = new Attachment(fileName, mLocalImagePath, Constants.MIME_TYPE_IMAGE);
-        mAttachments.add(attachment);
 
-        StorageReference imageRef = mImageStorageReference.child(attachment.getName());
+        StorageReference imageRef = mImageStorageReference.child(fileName);
 
         UploadTask uploadTask = imageRef.putFile(fileToUpload);
         uploadTask.addOnFailureListener(new OnFailureListener() {
@@ -780,6 +806,7 @@ public class NoteEditorFragment extends Fragment {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 imageUploadedToCloud = true;
+                Log.d(LOG_TAG, "URL: " + taskSnapshot.getDownloadUrl());
                 makeToast("Image uploaded successfully");
             }
         });
