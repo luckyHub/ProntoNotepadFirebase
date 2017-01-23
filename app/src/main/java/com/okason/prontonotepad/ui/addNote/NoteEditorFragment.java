@@ -675,17 +675,14 @@ public class NoteEditorFragment extends Fragment {
                     uploadFileToCloud(mLocalImagePath, Constants.MIME_TYPE_IMAGE);
                     break;
                 case SKETCH_CAPTURE_REQUEST:
-                    Uri uri = data.getData();
-                    String filePath = FileUtils.getRealPathFromURI(uri, getContext());
-                    if (!TextUtils.isEmpty(filePath)) {
-                        populateSketch(filePath, false);
-                        uploadFileToCloud(filePath, Constants.MIME_TYPE_SKETCH);
-                    }else {
+                    String sketchFilePath = data.getData().toString();
+                    if (!TextUtils.isEmpty(sketchFilePath)) {
+                        populateSketch(sketchFilePath, false);
+                        uploadFileToCloud(sketchFilePath, Constants.MIME_TYPE_SKETCH);
+                    } else {
                         makeToast("Sketch is empty");
                     }
-
                     break;
-
             }
         }
 
@@ -746,7 +743,7 @@ public class NoteEditorFragment extends Fragment {
     private void populateSketch(String sketchImagePath, boolean isCloudImage) {
         mSketchAttachment.setVisibility(View.VISIBLE);
         if (isCloudImage) {
-            Uri fileToDownload = Uri.fromFile(new File(mLocalImagePath));
+            Uri fileToDownload = Uri.fromFile(new File(sketchImagePath));
             StorageReference imageRef = mAttachmentStorageReference.child(fileToDownload.getLastPathSegment());
             Glide.with(getContext())
                     .using(new FirebaseImageLoader())

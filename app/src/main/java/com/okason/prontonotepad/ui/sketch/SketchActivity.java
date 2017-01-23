@@ -100,9 +100,9 @@ public class SketchActivity extends Activity {
             finish();
         }
 
-        String sketchFilePath = sketchFile.getPath();
+        String signatureFilePath = sketchFile.getPath();
         Intent data = new Intent();
-        data.setData(Uri.parse(sketchFilePath));
+        data.setData(Uri.parse(signatureFilePath));
         setResult(RESULT_OK, data);
         finish();
         customView.destroyDrawingCache();

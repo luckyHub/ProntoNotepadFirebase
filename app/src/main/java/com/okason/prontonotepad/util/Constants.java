@@ -49,4 +49,5 @@ public class Constants {
 
     public static final String FIREBASE_STORAGE_BUCKET = "gs://prontonotepad.appspot.com";
     public static final String IS_DUAL_SCREEN = "is_dual_screen";
+    public static final String SKETCH_PATH = "sketch_path";
 }
