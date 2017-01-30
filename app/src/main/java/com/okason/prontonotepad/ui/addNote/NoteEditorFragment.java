@@ -3,7 +3,13 @@ package com.okason.prontonotepad.ui.addNote;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.app.Dialog;
+import android.app.PendingIntent;
+import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,14 +19,17 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -28,9 +37,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.TimePicker;
 
 import com.bumptech.glide.Glide;
 import com.firebase.ui.storage.images.FirebaseImageLoader;
@@ -56,6 +67,7 @@ import com.okason.prontonotepad.model.Attachment;
 import com.okason.prontonotepad.model.Category;
 import com.okason.prontonotepad.model.Note;
 import com.okason.prontonotepad.ui.category.SelectCategoryDialogFragment;
+import com.okason.prontonotepad.ui.reminder.AlarmReceiver;
 import com.okason.prontonotepad.ui.sketch.SketchActivity;
 import com.okason.prontonotepad.util.Constants;
 import com.okason.prontonotepad.util.FileUtils;
@@ -64,6 +76,7 @@ import com.okason.prontonotepad.util.TimeUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import butterknife.BindView;
@@ -118,6 +131,8 @@ public class NoteEditorFragment extends Fragment {
     private boolean imageUploadedToCloud = false;
     private String mLocalSketchPath = null;
     private boolean sketchUploadedToCloud = false;
+    private Calendar mReminderTime;
+
 
     private Uri mImageURI = null;
 
@@ -254,7 +269,9 @@ public class NoteEditorFragment extends Fragment {
         PackageManager packageManager = getActivity().getPackageManager();
         switch (item.getItemId()) {
             case R.id.action_save:
-                validateAndSaveContent();
+                if (validateContent()){
+                    addNoteToFirebase();
+                }
                 break;
             case R.id.action_delete:
                 if (isInEditMode && mCurrentNote != null) {
@@ -302,6 +319,13 @@ public class NoteEditorFragment extends Fragment {
                     startActivityForResult(sketchIntent, SKETCH_CAPTURE_REQUEST);
                 }
                 break;
+            case R.id.action_reminder:
+                if (TextUtils.isEmpty(mCurrentNote.getNoteId())){
+                    makeToast("Save note before adding a reminder");
+                }else {
+                    showReminderDate();
+                }
+
 
         }
         return super.onOptionsItemSelected(item);
@@ -309,21 +333,22 @@ public class NoteEditorFragment extends Fragment {
 
 
 
-    private void validateAndSaveContent() {
+
+    private boolean validateContent() {
 
         String title = mTitle.getText().toString();
         if (TextUtils.isEmpty(title)) {
             mTitle.setError(getString(R.string.title_is_required));
-            return;
+            return false;
         }
 
         String content = mContent.getText().toString();
         if (TextUtils.isEmpty(content)) {
             mContent.setError(getString(R.string.note_is_required));
-            return;
+            return false;
         }
-        addNoteToFirebase();
 
+        return true;
     }
 
     private void addNoteToFirebase() {
@@ -763,9 +788,9 @@ public class NoteEditorFragment extends Fragment {
     }
 
 
-    private void uploadFileToCloud(String filePath, final String filetType){
+    private void uploadFileToCloud(String filePath, final String fileType){
         StorageMetadata metadata = new StorageMetadata.Builder()
-                .setContentType(filetType)
+                .setContentType(fileType)
                 .build();
 
         Uri fileToUpload = Uri.fromFile(new File(filePath));
@@ -783,11 +808,11 @@ public class NoteEditorFragment extends Fragment {
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                if (filetType.equals(Constants.MIME_TYPE_AUDIO)){
+                if (fileType.equals(Constants.MIME_TYPE_AUDIO)){
                     audioUploadedToCloud = true;
-                }else if (filetType.equals(Constants.MIME_TYPE_IMAGE)){
+                }else if (fileType.equals(Constants.MIME_TYPE_IMAGE)){
                     imageUploadedToCloud = true;
-                }else if (filetType.equals(Constants.MIME_TYPE_SKETCH)){
+                }else if (fileType.equals(Constants.MIME_TYPE_SKETCH)){
                     sketchUploadedToCloud = true;
                 }
                 makeToast("File uploaded successfully");
@@ -795,6 +820,100 @@ public class NoteEditorFragment extends Fragment {
         });
 
     }
+
+
+
+
+    private void setAlarm(){
+        AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(getContext(), AlarmReceiver.class);
+        Gson gson = new Gson();
+        String serializedNote = gson.toJson(mCurrentNote);
+        intent.putExtra(Constants.SERIALIZED_NOTE, serializedNote);
+
+        PendingIntent alarmIntent = PendingIntent.getBroadcast(getContext(), 0 , intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() +
+                (mReminderTime.getTimeInMillis() - System.currentTimeMillis()), alarmIntent);
+
+        mCurrentNote.setNoteType(Constants.NOTE_TYPE_REMINDER);
+        mCurrentNote.setNextReminder(mReminderTime.getTimeInMillis());
+        addNoteToFirebase();
+
+
+    }
+
+    public void showReminderDate() {
+        DialogFragment reminderDatePicker = new ReminderDatePickerDialogFragment();
+        reminderDatePicker.setTargetFragment(NoteEditorFragment.this, 0);
+        reminderDatePicker.show(getFragmentManager(), "reminderDatePicker");
+
+    }
+
+
+    public void showReminderTime() {
+        DialogFragment reminderTimePicker = new ReminderTimePickerDialogFragment();
+        reminderTimePicker.setTargetFragment(NoteEditorFragment.this, 0);
+        reminderTimePicker.show(getFragmentManager(), "reminderTimePicker");
+
+    }
+
+
+
+    public static class ReminderDatePickerDialogFragment extends DialogFragment
+            implements DatePickerDialog.OnDateSetListener{
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the current date as the default date in the picker
+            final Calendar c = Calendar.getInstance();
+            int year = c.get(Calendar.YEAR);
+            int month = c.get(Calendar.MONTH);
+            int day = c.get(Calendar.DAY_OF_MONTH);
+
+            // Create a new instance of DatePickerDialog and return it
+            return new DatePickerDialog(getActivity(), this, year, month, day);
+        }
+        @Override
+        public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+            NoteEditorFragment targetFragment = (NoteEditorFragment)getTargetFragment();
+            if (year < 0){
+                targetFragment = null;
+            } else {
+                targetFragment.mReminderTime = Calendar.getInstance();
+                targetFragment.mReminderTime.set(year, monthOfYear, dayOfMonth);
+                targetFragment.showReminderDate();
+                targetFragment.showReminderTime();
+
+            }
+
+        }
+
+    }
+
+    public static class ReminderTimePickerDialogFragment extends DialogFragment
+            implements TimePickerDialog.OnTimeSetListener{
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            final Calendar c = Calendar.getInstance();
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+            int minute = c.get(Calendar.MINUTE);
+
+            // Create a new instance of TimePickerDialog and return it
+            return new TimePickerDialog(getActivity(), this, hour, minute,
+                    DateFormat.is24HourFormat(getActivity()));
+        }
+        @Override
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            NoteEditorFragment targetFragment = (NoteEditorFragment)getTargetFragment();
+            targetFragment.mReminderTime.set(Calendar.HOUR, hourOfDay);
+            targetFragment.mReminderTime.set(Calendar.MINUTE, minute);
+            targetFragment.setAlarm();
+        }
+
+    }
+
+
 
 
 

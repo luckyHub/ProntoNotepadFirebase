@@ -118,6 +118,7 @@ public class NoteDetailFragment extends Fragment {
                 }
                 break;
 
+
         }
         return super.onOptionsItemSelected(item);
     }
@@ -153,4 +154,6 @@ public class NoteDetailFragment extends Fragment {
     public void setmListener(OnEditNoteButtonClickedListener mListener) {
         this.mListener = mListener;
     }
+
+
 }

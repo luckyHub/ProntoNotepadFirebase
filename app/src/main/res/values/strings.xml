@@ -101,5 +101,6 @@
     <string name="image_attachment">Image</string>
     <string name="save">Save</string>
     <string name="erase">Erase</string>
+    <string name="title_activity_reminder">ReminderActivity</string>
 
 </resources>

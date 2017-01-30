@@ -36,10 +36,4 @@
           app:showAsAction="ifRoom"/>
 
 
-      <item android:id="@+id/action_reminder"
-          android:title="@string/action_alarm"
-          android:icon="@drawable/ic_add_alarm_white_36dp"
-          app:showAsAction="ifRoom"/>
-
-
 </menu>
