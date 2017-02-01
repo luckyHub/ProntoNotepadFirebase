@@ -171,8 +171,7 @@ public class AuthUiActivity extends AppCompatActivity {
         startActivityForResult(
                 AuthUI.getInstance().createSignInIntentBuilder()
                         .setTheme(R.style.GreenTheme)
-                        .setLogo(R.drawable.logo_googleg_color_144dp)
-                        .setProviders(getSelectedProviders())
+                         .setProviders(getSelectedProviders())
                         .setTosUrl(GOOGLE_TOS_URL)
                         .setIsSmartLockEnabled(false)
                         .build(),

@@ -39,7 +39,9 @@
         <item name="colorControlNormal">@color/material_green_500</item>
         <item name="colorControlActivated">@color/material_lime_a700</item>
         <item name="colorControlHighlight">@color/material_green_a200</item>
-        <item name="android:windowBackground">@color/material_green_50</item>
+        <item name="android:windowBackground">@drawable/sign_in_background</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
         <item name="android:textColor">@color/material_grey_900</item>
         <item name="android:textColorPrimary">@color/material_deep_purple_50</item>
         <item name="colorButtonNormal">@color/material_green_500</item>

@@ -19,7 +19,6 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -67,7 +66,6 @@ import com.okason.prontonotepad.model.Attachment;
 import com.okason.prontonotepad.model.Category;
 import com.okason.prontonotepad.model.Note;
 import com.okason.prontonotepad.ui.category.SelectCategoryDialogFragment;
-import com.okason.prontonotepad.ui.reminder.AlarmReceiver;
 import com.okason.prontonotepad.ui.sketch.SketchActivity;
 import com.okason.prontonotepad.util.Constants;
 import com.okason.prontonotepad.util.FileUtils;
@@ -270,7 +268,7 @@ public class NoteEditorFragment extends Fragment {
         switch (item.getItemId()) {
             case R.id.action_save:
                 if (validateContent()){
-                    addNoteToFirebase();
+                    addNoteToFirebase("");
                 }
                 break;
             case R.id.action_delete:
@@ -320,7 +318,7 @@ public class NoteEditorFragment extends Fragment {
                 }
                 break;
             case R.id.action_reminder:
-                if (TextUtils.isEmpty(mCurrentNote.getNoteId())){
+                if (mCurrentNote == null){
                     makeToast("Save note before adding a reminder");
                 }else {
                     showReminderDate();
@@ -351,7 +349,7 @@ public class NoteEditorFragment extends Fragment {
         return true;
     }
 
-    private void addNoteToFirebase() {
+    private void addNoteToFirebase(String message) {
         if (mCurrentNote == null){
             mCurrentNote = new Note();
             String key = noteCloudReference.push().getKey();
@@ -385,9 +383,14 @@ public class NoteEditorFragment extends Fragment {
 
         noteCloudReference.child(mCurrentNote.getNoteId()).setValue(mCurrentNote);
 
-        String result = isInEditMode ? "Note updated" : "Note added";
+        String result;
+        if (TextUtils.isEmpty(message)) {
+            result = isInEditMode ? "Note updated" : "Note added";
+        } else {
+            result = message;
+        }
         makeToast(result);
-        startActivity(new Intent(getActivity(), MainActivity.class));
+       // startActivity(new Intent(getActivity(), MainActivity.class));
 
     }
 
@@ -832,12 +835,14 @@ public class NoteEditorFragment extends Fragment {
         intent.putExtra(Constants.SERIALIZED_NOTE, serializedNote);
 
         PendingIntent alarmIntent = PendingIntent.getBroadcast(getContext(), 0 , intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() +
-                (mReminderTime.getTimeInMillis() - System.currentTimeMillis()), alarmIntent);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, mReminderTime.getTimeInMillis(), alarmIntent);
+
+        String selectedTime = TimeUtils.getDueDate(mReminderTime.getTimeInMillis());
+
 
         mCurrentNote.setNoteType(Constants.NOTE_TYPE_REMINDER);
         mCurrentNote.setNextReminder(mReminderTime.getTimeInMillis());
-        addNoteToFirebase();
+        addNoteToFirebase("Reminder set");
 
 
     }
@@ -881,7 +886,6 @@ public class NoteEditorFragment extends Fragment {
             } else {
                 targetFragment.mReminderTime = Calendar.getInstance();
                 targetFragment.mReminderTime.set(year, monthOfYear, dayOfMonth);
-                targetFragment.showReminderDate();
                 targetFragment.showReminderTime();
 
             }
@@ -895,7 +899,8 @@ public class NoteEditorFragment extends Fragment {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Calendar c = Calendar.getInstance();
+            NoteEditorFragment targetFragment = (NoteEditorFragment)getTargetFragment();
+            final Calendar c = targetFragment.mReminderTime;
             int hour = c.get(Calendar.HOUR_OF_DAY);
             int minute = c.get(Calendar.MINUTE);
 
@@ -906,7 +911,7 @@ public class NoteEditorFragment extends Fragment {
         @Override
         public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
             NoteEditorFragment targetFragment = (NoteEditorFragment)getTargetFragment();
-            targetFragment.mReminderTime.set(Calendar.HOUR, hourOfDay);
+            targetFragment.mReminderTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
             targetFragment.mReminderTime.set(Calendar.MINUTE, minute);
             targetFragment.setAlarm();
         }

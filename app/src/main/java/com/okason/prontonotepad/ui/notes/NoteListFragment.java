@@ -176,6 +176,16 @@ public class NoteListFragment extends Fragment {
                     showEmptyText();
                 }
             }
+
+            @Override
+            public void onItemRangeRemoved(int positionStart, int itemCount) {
+                int noteCount = mNoteFirebaseAdapter.getItemCount();
+                if (noteCount > 0){
+                    hideEmptyText();
+                } else {
+                    showEmptyText();
+                }
+            }
         });
 
 

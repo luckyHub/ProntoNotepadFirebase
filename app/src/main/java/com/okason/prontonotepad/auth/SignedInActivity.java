@@ -80,6 +80,7 @@ public class SignedInActivity extends AppCompatActivity {
         ButterKnife.bind(this);
         populateProfile();
         populateIdpToken();
+
     }
 
     @OnClick(R.id.sign_out)
