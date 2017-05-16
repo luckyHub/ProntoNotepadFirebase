@@ -30,49 +30,12 @@
             android:name=".auth.SignedInActivity"
             android:label="@string/name_auth_ui" />
 
-
         <!-- Auth UI demo -->
         <activity
             android:name=".auth.AuthUiActivity"
             android:label="@string/name_auth_ui" />
-        <activity
-            android:name=".ui.addNote.AddNoteActivity"
-            android:label="@string/title_activity_add_note"
-            android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.okason.prontonotepad.MainActivity" />
-        </activity>
-        <activity
-            android:name=".ui.category.CategoryActivity"
-            android:label="@string/title_activity_category"
-            android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.okason.prontonotepad.MainActivity" />
-        </activity>
 
-        <service
-            android:name=".services.DeleteCategoryIntentService"
-            android:exported="false" />
 
-        <activity
-            android:name=".ui.notedetails.NoteDetailActivity"
-            android:label="@string/title_activity_note_details"
-            android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.okason.prontonotepad.MainActivity" />
-        </activity>
-        <activity
-            android:name=".ui.sketch.SketchActivity"
-            android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen" />
-
-        <receiver android:name=".ui.addNote.AlarmReceiver" />
     </application>
 
 </manifest>

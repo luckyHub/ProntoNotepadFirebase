@@ -1,43 +1,35 @@
 {
   "project_info": {
-    "project_number": "559478564757",
-    "firebase_url": "https://prontonotepad.firebaseio.com",
-    "project_id": "prontonotepad",
-    "storage_bucket": "prontonotepad.appspot.com"
+    "project_number": "1012508663871",
+    "firebase_url": "https://prontonotepadfirebase-82ad4.firebaseio.com",
+    "project_id": "prontonotepadfirebase-82ad4",
+    "storage_bucket": "prontonotepadfirebase-82ad4.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:559478564757:android:70b3abdc06a29d8d",
+        "mobilesdk_app_id": "1:1012508663871:android:70b3abdc06a29d8d",
         "android_client_info": {
           "package_name": "com.okason.prontonotepad"
         }
       },
       "oauth_client": [
         {
-          "client_id": "559478564757-t43q2qhn38ago9k5dvqp0qpagnapr2n8.apps.googleusercontent.com",
+          "client_id": "1012508663871-6i9lefksmpotopmcv7f85flv6sltk5eo.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.okason.prontonotepad",
-            "certificate_hash": "0E4C03D8AECBAC0B3AC3361D242681DFEDFEDC64"
+            "certificate_hash": "18d918c46c7bc3761c2480955a577b6e77a1df53"
           }
         },
         {
-          "client_id": "559478564757-n92j6te54ip2k3b78ds9bfefjsafl3mk.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.okason.prontonotepad",
-            "certificate_hash": "5B3AA978A97D6AAE682237C7F97D187151693A53"
-          }
-        },
-        {
-          "client_id": "559478564757-t41ossqq2buldf9bi2hlet26jh7pm4co.apps.googleusercontent.com",
+          "client_id": "1012508663871-s3ood9u84j61p550sgj3hb4apl83og9a.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCfVUlZ1wHA46ulNGLt03_vKJNqfGBtWR8"
+          "current_key": "AIzaSyCpaJZA1CdsAehpyCs7KyN0X5FDib7ZYu4"
         }
       ],
       "services": {
@@ -48,7 +40,7 @@
           "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "559478564757-t41ossqq2buldf9bi2hlet26jh7pm4co.apps.googleusercontent.com",
+              "client_id": "1012508663871-s3ood9u84j61p550sgj3hb4apl83og9a.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

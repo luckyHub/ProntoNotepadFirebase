@@ -1,23 +1,18 @@
 package com.okason.prontonotepad.model;
 
 /**
- * Created by Valentine on 9/7/2015.
+ * Created by Tony on 5/16/2017.
  */
-public class Category {
 
+public class Category {
     private String categoryId;
     private String categoryName;
-    private String categoryColor;
     private int count;
 
-
-
-    public Category() {
-    }
-
-    public Category(String id, String name){
-        this.categoryId = id;
-        this.categoryName = name;
+    public Category(String categoryId, String categoryName, int count) {
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
+        this.count = count;
     }
 
     public String getCategoryId() {
@@ -34,14 +29,6 @@ public class Category {
 
     public void setCategoryName(String categoryName) {
         this.categoryName = categoryName;
-    }
-
-    public String getCategoryColor() {
-        return categoryColor;
-    }
-
-    public void setCategoryColor(String categoryColor) {
-        this.categoryColor = categoryColor;
     }
 
     public int getCount() {
