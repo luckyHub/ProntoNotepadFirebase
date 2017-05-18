@@ -1,16 +1,23 @@
 package com.okason.prontonotepad;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.MainThread;
+import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.View;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
@@ -47,6 +54,8 @@ public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
+    @BindView(android.R.id.content)
+    View mRootView;
 
 
     @Override
@@ -54,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mActivity = MainActivity.this;
 
@@ -128,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
                             String name = ((Nameable) drawerItem).getName().getText(mActivity);
                             toolbar.setTitle(name);
                         }
-                        if (drawerItem != null){
+                        if (drawerItem != null) {
                             onTouchDrawer((int) drawerItem.getIdentifier());
                         }
                         return false;
@@ -164,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onTouchDrawer(int position) {
-        switch (position){
+        switch (position) {
             case Constants.NOTES:
                 //Do Nothing, we are already on Notes
                 break;
@@ -176,28 +184,67 @@ public class MainActivity extends AppCompatActivity {
                 ///startActivity(new Intent(NoteListActivity.this, SettingsActivity.class));
                 break;
             case Constants.LOGOUT:
-                ///logout();
+                logout();
                 break;
             case Constants.DELETE:
-                ///deleteAccountClicked();
+                deleteAccountClicked();
                 break;
         }
 
     }
 
-    private void logout(){
-        AuthUI.getInstance()
+    private void deleteAccountClicked() {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setMessage("Are you sure you want to delete this account?")
+                .setPositiveButton("Yes DO IT !", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        deleteAccount();
+                    }
+                })
+                .setNegativeButton("No", null)
+                .create();
     }
 
 
+    private void deleteAccount() {
+        AuthUI.getInstance()
+                .delete(this)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            startActivity(new Intent(mActivity, MainActivity.class));
+                            finish();
+                        } else {
+                            showSnackbar(R.string.delete_account_failed);
+                        }
+                    }
+                });
 
+    }
 
+    private void logout() {
+        AuthUI.getInstance()
+                .signOut(this)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            startActivity(new Intent(mActivity, MainActivity.class));
+                            finish();
+                        } else {
+                            showSnackbar(R.string.sign_out_failed);
+                        }
 
+                    }
+                });
+    }
 
-
-
-
-
+    @MainThread
+    private void showSnackbar(@StringRes int errorMessageRes) {
+        Snackbar.make(mRootView, errorMessageRes, Snackbar.LENGTH_LONG).show();
+    }
 
 
 }
