@@ -47,8 +47,6 @@ dependencies {
         transitive = true
     }
 
-
-
     compile 'de.hdodenhof:circleimageview:1.3.0'
     compile 'com.android.support:appcompat-v7:24.2.1'
     compile 'com.android.support:cardview-v7:24.2.1'
