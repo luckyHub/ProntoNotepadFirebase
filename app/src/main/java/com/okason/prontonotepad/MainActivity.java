@@ -10,6 +10,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.View;
 
+import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
@@ -184,7 +185,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
+    private void logout(){
+        AuthUI.getInstance()
+    }
 
 
 
