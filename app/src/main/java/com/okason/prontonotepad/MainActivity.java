@@ -20,6 +20,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
@@ -41,6 +43,12 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
+    private DatabaseReference mDatabase;
+    private DatabaseReference mNoteCloudReference;
+    private DatabaseReference mCategoryCloudReference;
+
+
+
     private String mUsername;
     private String mEmailAddress;
     private String mPhotoUrl;
@@ -68,6 +76,16 @@ public class MainActivity extends AppCompatActivity {
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        //reference to child nodes, Note and Category.
+        mNoteCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT
+                + mFirebaseUser.getUid()
+                + Constants.NOTE_CLOUD_END_POINT);
+        mCategoryCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT
+                + mFirebaseUser.getUid()
+                + Constants.CATEGORY_CLOUD_END_POINT);
+
+
 
         //check if user signed in
         if (mFirebaseUser == null) {
@@ -75,14 +93,14 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         } else {
-            //user signed in
+            //user logged in
             mUsername = mFirebaseUser.getDisplayName();
             mEmailAddress = mFirebaseUser.getEmail();
             mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
+            String uid = mFirebaseUser.getUid();
         }
 
         setUpNavigationDrawer(savedInstanceState);
-
 
         FloatingActionButton floatingBtn = (FloatingActionButton) findViewById(R.id.fab);
         floatingBtn.setOnClickListener(new View.OnClickListener() {
