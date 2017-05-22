@@ -34,7 +34,11 @@ import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.mikepenz.materialdrawer.util.KeyboardUtil;
 import com.okason.prontonotepad.auth.AuthUiActivity;
+import com.okason.prontonotepad.model.Note;
+import com.okason.prontonotepad.model.SampleData;
 import com.okason.prontonotepad.util.Constants;
+
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -85,15 +89,13 @@ public class MainActivity extends AppCompatActivity {
                 + mFirebaseUser.getUid()
                 + Constants.CATEGORY_CLOUD_END_POINT);
 
-
-
         //check if user signed in
         if (mFirebaseUser == null) {
             startActivity(new Intent(MainActivity.this, AuthUiActivity.class));
             finish();
             return;
         } else {
-            //user logged in
+            //user signed in
             mUsername = mFirebaseUser.getDisplayName();
             mEmailAddress = mFirebaseUser.getEmail();
             mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
@@ -113,6 +115,27 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+    protected void onResume() {
+        super.onResume();
+        addDataToFirebase();
+
+    }
+
+    public void  addDataToFirebase(){
+        List<Note> notes = SampleData.getSampleNotes();
+        for(Note note : notes) {
+            String key = mNoteCloudReference.push().getKey();     ///get note key reference
+            note.setNoteId(key);                                 /// give note class id of key
+            mNoteCloudReference.child(key).setValue(note);       ///use cloud database reference to add child note class  at key location
+        }
+
+
+
+
+
+    }
+
 
     private void setUpNavigationDrawer(Bundle savedInstanceState) {
         mUsername = TextUtils.isEmpty(mUsername) ? ANONYMOUS : mUsername;
