@@ -3,16 +3,21 @@ package com.okason.prontonotepad;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 
 import com.firebase.ui.auth.AuthUI;
@@ -20,8 +25,11 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
@@ -34,10 +42,15 @@ import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.mikepenz.materialdrawer.util.KeyboardUtil;
 import com.okason.prontonotepad.auth.AuthUiActivity;
+import com.okason.prontonotepad.model.Category;
 import com.okason.prontonotepad.model.Note;
 import com.okason.prontonotepad.model.SampleData;
+import com.okason.prontonotepad.ui.addnote.AddNoteActivitiy;
+import com.okason.prontonotepad.ui.category.CategoryActivity;
+import com.okason.prontonotepad.ui.notes.NoteListFragment;
 import com.okason.prontonotepad.util.Constants;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -50,8 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference mDatabase;
     private DatabaseReference mNoteCloudReference;
     private DatabaseReference mCategoryCloudReference;
-
-
+    private List<Note> mNotes;
 
     private String mUsername;
     private String mEmailAddress;
@@ -76,18 +88,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
-        mActivity = MainActivity.this;
 
+        mActivity = MainActivity.this;
+        mNotes = new ArrayList<>();
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        //reference to child nodes, Note and Category.
-        mNoteCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT
-                + mFirebaseUser.getUid()
-                + Constants.NOTE_CLOUD_END_POINT);
-        mCategoryCloudReference =  mDatabase.child(Constants.USERS_CLOUD_END_POINT
-                + mFirebaseUser.getUid()
-                + Constants.CATEGORY_CLOUD_END_POINT);
 
         //check if user signed in
         if (mFirebaseUser == null) {
@@ -102,40 +108,94 @@ public class MainActivity extends AppCompatActivity {
             String uid = mFirebaseUser.getUid();
         }
 
+        //reference to nodes Note and Category.
+        mNoteCloudReference = mDatabase.child(Constants.USERS_CLOUD_END_POINT
+                + "new/"        //temporailly added
+                + mFirebaseUser.getUid()
+                + Constants.NOTE_CLOUD_END_POINT);
+        mCategoryCloudReference = mDatabase.child(Constants.USERS_CLOUD_END_POINT
+                + mFirebaseUser.getUid()
+                + Constants.CATEGORY_CLOUD_END_POINT);
+
+
+        mNoteCloudReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) { //receives the data snapshot
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) { //use getChildren to access DataSnapshot
+                    Note note = snapshot.getValue(Note.class);
+                    mNotes.add(note);
+                    Log.i("LogNotes", note.getNoteId());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
         setUpNavigationDrawer(savedInstanceState);
+
+        //Display data
+        addDefaultData();     //add initial dataset of categories and notes to Firebase
+        openFragment(new NoteListFragment(),"Notes");   //display in fragment with adapter & recycler
 
         FloatingActionButton floatingBtn = (FloatingActionButton) findViewById(R.id.fab);
         floatingBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Snackbar.make(v, "replace action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+              startActivity(new Intent(mActivity, AddNoteActivitiy.class));
             }
         });
-
 
     }
 
     protected void onResume() {
-        super.onResume();
-        addDataToFirebase();
+       super.onResume();
 
     }
 
-    public void  addDataToFirebase(){
-        List<Note> notes = SampleData.getSampleNotes();
-        for(Note note : notes) {
-            String key = mNoteCloudReference.push().getKey();     ///get note key reference
-            note.setNoteId(key);                                 /// give note class id of key
-            mNoteCloudReference.child(key).setValue(note);       ///use cloud database reference to add child note class  at key location
+    private void openFragment(Fragment fragment, String title) {
+        //AppCompatActivity extends FragmentActivity where getSupportFragmentManager is defined
+        getSupportFragmentManager()
+                .beginTransaction()
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .replace(R.id.container, fragment)
+                .addToBackStack(title)
+                .commit();
+        getSupportActionBar().setTitle(title);
+    }
+
+    public void addDefaultData() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        if (sharedPreferences.getBoolean(Constants.FIRST_RUN, true)) {
+            addInitialNotes();
+            addInitialCategories();
+            editor.putBoolean(Constants.FIRST_RUN, false).apply(); //see also "commit" instruction
+        } else {
+            Log.i("SharedPreference", "SHARED PREF > FIRST TIME true");
         }
-
-
-
-
-
     }
 
+    private void addInitialCategories() {
+        List<String> categoryNames = SampleData.getSampleCategories();
+        for (String categoryName : categoryNames) {
+            Category category = new Category();
+            category.setCategoryName(categoryName);
+            category.setCategoryId(mCategoryCloudReference.push().getKey());
+            mCategoryCloudReference.child(category.getCategoryId()).setValue(category);
+        }
+    }
+
+    public void addInitialNotes() {
+        List<Note> notes = SampleData.getSampleNotes();     //Static method creates list of notes
+        for (Note note : notes) {
+            String key = mNoteCloudReference.push().getKey();  ///get note key reference
+            note.setNoteId(key);                              /// set note class id  key
+            mNoteCloudReference.child(key).setValue(note);   ///WRITE to cloud database reference
+        }
+    }
 
     private void setUpNavigationDrawer(Bundle savedInstanceState) {
         mUsername = TextUtils.isEmpty(mUsername) ? ANONYMOUS : mUsername;
@@ -218,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
                 //Do Nothing, we are already on Notes
                 break;
             case Constants.CATEGORIES:
-                ///startActivity(new Intent(NoteListActivity.this, CategoryActivity.class));
+                startActivity(new Intent(MainActivity.this, CategoryActivity.class));
                 break;
             case Constants.SETTINGS:
                 //Go to Settings

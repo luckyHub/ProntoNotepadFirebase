@@ -9,7 +9,7 @@
     <string name="title_activity_login">LoginActivity</string>
 
     <!-- strings for Auth UI demo activities -->
-    <eat-comment />
+    <eat-comment/>
     <string name="sign_in">Start</string>
     <string name="green_theme">Green Theme</string>
     <string name="purple_theme">Purple Theme</string>
@@ -102,5 +102,6 @@
     <string name="save">Save</string>
     <string name="erase">Erase</string>
     <string name="title_activity_reminder">ReminderActivity</string>
+    <string name="title_activity_add_note_activitiy">AddNoteActivitiy</string>
 
 </resources>

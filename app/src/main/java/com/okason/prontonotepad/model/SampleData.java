@@ -25,9 +25,7 @@ public class SampleData {
         categoryNames.add("Blog Posts");
         categoryNames.add("Social Media");
 
-
         return categoryNames;
-
     }
 
 

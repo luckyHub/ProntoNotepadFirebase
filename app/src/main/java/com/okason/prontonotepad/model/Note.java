@@ -1,9 +1,5 @@
 package com.okason.prontonotepad.model;
 
-/**
- * Created by Tony on 5/16/2017.
- */
-
 public class Note {
     private String noteId;
     private String title;

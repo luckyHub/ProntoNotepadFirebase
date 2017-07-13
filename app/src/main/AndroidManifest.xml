@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.okason.prontonotepad">
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.okason.prontonotepad">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <application
         android:name=".ProntoNotepadApplication"
@@ -20,22 +20,40 @@
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN"/>
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
         <!-- Auth UI demo -->
         <activity
             android:name=".auth.SignedInActivity"
-            android:label="Signed In Activity" />
+            android:label="Signed In Activity"/>
 
         <!-- Auth UI demo -->
         <activity
             android:name=".auth.AuthUiActivity"
-            android:label="@string/name_auth_ui" />
-
-
+            android:label="@string/name_auth_ui"/>
+        <activity
+            android:name=".ui.addnote.AddNoteActivitiy"
+            android:label="@string/title_activity_add_note_activitiy"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.okason.prontonotepad.MainActivity"/>
+        </activity>
+        <activity
+            android:name=".ui.category.CategoryActivity"
+            android:label="@string/title_activity_category"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.okason.prontonotepad.MainActivity"/>
+        </activity>
+        <activity android:name=".ui.notes.NoteListActivity">
+        </activity>
     </application>
 
 </manifest>
